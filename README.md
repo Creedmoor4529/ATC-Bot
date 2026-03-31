@@ -221,3 +221,9 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 | `components/dcs_export.py` | Receives weather data from DCS |
 | `components/airfield_db.py` | ICAO coordinate lookup table |
 | `bot.log` | Runtime log — written when using the launcher exe |
+
+---
+
+## Development
+
+This project was developed with [Claude.ai](https://claude.ai) (Anthropic).
