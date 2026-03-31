@@ -73,7 +73,10 @@ Find the `["Tacview"]` block inside `["plugins"]` and set the following values:
 ["tacviewRealTimeTelemetryPort"] = "42674",
 ["tacviewRemoteControlEnabled"] = true,
 ["tacviewRemoteControlPort"] = "42675",
+["tacviewPlaybackDelay"] = 0,
 ```
+
+> **Important:** `tacviewPlaybackDelay` must be `0`. Any non-zero value introduces a delay in the telemetry stream and the bot will not receive live position data.
 
 If the `["Tacview"]` block does not exist, add it inside the `["plugins"]` table. Leave `["tacviewRealTimeTelemetryPassword"]` and `["tacviewRemoteControlPassword"]` as empty strings unless you want password protection.
 
