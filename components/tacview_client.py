@@ -74,7 +74,16 @@ class AircraftState:
         return self.alt_ft > 100
 
     def summary(self, airport_lat: float = 0.0, airport_lon: float = 0.0) -> str:
-        label = self.pilot or self.group or self.name or self.object_id
+        raw = self.pilot or self.group or self.name or self.object_id
+        # DCS label format: "callsign | pilot_name | squad | ..."
+        # The part before the first | is the radio callsign; rest is pilot/squad metadata.
+        if "|" in raw:
+            parts = [p.strip() for p in raw.split("|")]
+            callsign = parts[0]
+            pilot_name = parts[1] if len(parts) > 1 else ""
+            label = f"CALLSIGN={callsign} PILOT={pilot_name}" if pilot_name else f"CALLSIGN={callsign}"
+        else:
+            label = f"CALLSIGN={raw}"
         base = (
             f"{label} | {self.type_str} | "
             f"HDG {self.heading:.0f} | "
@@ -237,9 +246,18 @@ class TacviewClient:
             self._update_reference(props_str)
             return
 
+        is_new = obj_id not in self.objects
         obj = self.objects.setdefault(obj_id, AircraftState(object_id=obj_id))
+        prev_type = obj.type_str
+        prev_lat, prev_lon = obj.lat, obj.lon
         self._apply_props(obj, props_str)
         obj.timestamp = self._current_timestamp
+        is_air = "Air" in obj.type_str
+        if is_new or (not prev_type and obj.type_str):
+            if is_air:
+                logger.debug(f"Tacview object {obj_id}: type={obj.type_str!r} pilot={obj.pilot!r} lat={obj.lat:.4f} lon={obj.lon:.4f}")
+        elif is_air and (abs(obj.lat - prev_lat) > 0.005 or abs(obj.lon - prev_lon) > 0.005):
+            logger.debug(f"Tacview pos update {obj_id} ({obj.pilot or obj.name!r}): lat={obj.lat:.4f} lon={obj.lon:.4f} hdg={obj.heading:.0f} spd={obj.speed_kts:.0f}kts")
 
     def _update_reference(self, props_str: str):
         for prop in props_str.split(","):

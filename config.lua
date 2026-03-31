@@ -112,7 +112,7 @@ FREQ_GROUND_2   = 258000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 -- =========================================================================
 
 -- Active runway (auto: primary ILS runway from database)
--- ACTIVE_RUNWAY = "28"
+ACTIVE_RUNWAY = "28"
 
 -- Magnetic variation in degrees east (auto: by map region)
 -- MAGNETIC_VAR = 4.5
@@ -126,8 +126,8 @@ FREQ_GROUND_2   = 258000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 -- MSA_FT = 2000
 
 -- Bot SRS position (auto: resolved from AIRPORT_ICAO)
--- BOT_LAT = 34.590
--- BOT_LON = 32.987
+BOT_LAT = 34.590
+BOT_LON = 32.987
 -- BOT_ALT = 10000
 
 -- -------------------------------------------------------------------------

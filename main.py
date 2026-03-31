@@ -88,13 +88,16 @@ class AudioAccumulator:
         self._decoder = opuslib.Decoder(sample_rate, 1)
         self._silence_task: asyncio.Task | None = None
         self._frequency: float = 0.0
+        self._guid: str = ""
 
-    def feed(self, opus_bytes: bytes, frequency: float):
+    def feed(self, opus_bytes: bytes, frequency: float, guid: str = ""):
         """Called for each incoming Opus packet."""
         try:
             pcm = self._decoder.decode(opus_bytes, AUDIO_SAMPLE_RATE * OPUS_FRAME_MS // 1000)
             self._buffer.append(pcm)
             self._frequency = frequency
+            if not self._guid:
+                self._guid = guid  # capture GUID from first packet of transmission
         except Exception:
             pass
 
@@ -109,10 +112,12 @@ class AudioAccumulator:
         if not self._buffer:
             return
         pcm_all = b"".join(self._buffer)
+        guid = self._guid
         self._buffer.clear()
+        self._guid = ""
         duration = len(pcm_all) / (self._sample_rate * 2)
         if duration >= MIN_AUDIO_DURATION:
-            asyncio.create_task(self._on_transmission(pcm_all, self._frequency))
+            asyncio.create_task(self._on_transmission(pcm_all, self._frequency, guid))
 
 
 READBACK_WINDOW = 10.0  # seconds to wait for pilot readback
@@ -257,7 +262,7 @@ class ATCBot:
                 except Exception as e:
                     logger.warning(f"SRS reconnect failed: {e}")
 
-    async def _on_transmission(self, pcm_bytes: bytes, frequency: float):
+    async def _on_transmission(self, pcm_bytes: bytes, frequency: float, guid: str = ""):
         """
         Full pipeline: PCM audio → STT → ATC Brain → TTS → SRS transmit.
         """
@@ -270,6 +275,15 @@ class ATCBot:
             logger.info("STT returned empty — skipping.")
             return
         logger.info(f"Pilot said: {text!r}")
+
+        # 1a. Drop pure courtesy phrases — no ATC response needed.
+        _COURTESY_ONLY = {
+            "thank you", "thanks", "thank you very much", "thanks very much",
+            "good day", "goodbye", "bye", "cheers", "seeya", "see ya",
+        }
+        if text.strip().rstrip(".!").lower() in _COURTESY_ONLY:
+            logger.info("Courtesy phrase — no response.")
+            return
 
         # 1b. Check for pending readback on this frequency
         pending = self._pending_readbacks.get(frequency)
@@ -289,36 +303,47 @@ class ATCBot:
                     await self.srs.transmit(pcm_reply, radio_index=pending["radio_index"])
             return
 
-        # 2. Extract pilot callsign.
-        # Radio format: "[ATC station], [PILOT CALLSIGN], [message]"
-        # Skip words belonging to the ATC station name (including STT mis-hearings)
-        # by also doing a prefix match against known ATC words.
-        _ATC_WORDS = {w.upper() for radio in ATC_FREQUENCIES for w in (radio.callsign or "").split()}
-        _ATC_WORDS.update({"APPROACH", "TOWER", "GROUND", "CONTROL", "RADAR", "DIRECTOR"})
-
-        def _is_atc_word(w: str) -> bool:
-            w = w.rstrip(".,")
-            if w in _ATC_WORDS:
-                return True
-            # Allow for STT phonetic mis-hearings by checking edit-distance-lite:
-            # if the word shares ≥60% of its characters with an ATC word (same length ±2)
-            for atc in _ATC_WORDS:
-                if abs(len(w) - len(atc)) <= 2 and len(w) >= 4:
-                    common = sum(c in atc for c in w)
-                    if common / len(w) >= 0.6:
-                        return True
-            return False
-
-        words = text.upper().split()
+        # 2. Resolve pilot callsign.
+        # Primary: look up the transmitting SRS client GUID → DCS name → callsign (before |).
+        # Fallback: extract from STT text if GUID not in registry (e.g. not yet synced).
         pilot_callsign = None
-        for i, w in enumerate(words):
-            if not _is_atc_word(w):
-                # Take this word plus the next if it's a number (e.g. "VIPER" + "11")
-                parts = [words[i].rstrip(".,")]
-                if i + 1 < len(words) and not words[i + 1].rstrip(".,").isalpha():
-                    parts.append(words[i + 1].rstrip(".,"))
-                pilot_callsign = " ".join(parts)
-                break
+        srs_dcs_name = self.srs.client_name(guid) if guid else ""
+        if srs_dcs_name:
+            # DCS format: "callsign | pilot_name | squad | ..." — first part is the radio callsign
+            pilot_callsign = srs_dcs_name.split("|")[0].strip()
+            logger.debug(f"SRS GUID lookup: {guid[:8]}.. → {srs_dcs_name!r} → callsign={pilot_callsign!r}")
+
+        if not pilot_callsign:
+            # Fallback: extract from transcribed text.
+            # Strategy: find last APPROACH/TOWER/GROUND service word, take the token(s) after it.
+            _SERVICE_WORDS = {"APPROACH", "TOWER", "GROUND", "CONTROL", "RADAR", "DIRECTOR"}
+            _MESSAGE_WORDS = {
+                "REQUEST", "INBOUND", "WITH", "DESCEND", "CLIMB", "MAINTAIN",
+                "SQUAWK", "ROGER", "WILCO", "NEGATIVE", "AFFIRM", "REPORT",
+                "DECLARE", "EMERGENCY", "MAYDAY", "PAN", "CONFIRM", "CHECKING",
+            }
+            words_clean = [w.rstrip(".,") for w in text.upper().split()]
+            service_idx = None
+            for i, w in enumerate(words_clean):
+                if w in _SERVICE_WORDS:
+                    service_idx = i
+            if service_idx is not None and service_idx + 1 < len(words_clean):
+                parts = []
+                for w in words_clean[service_idx + 1:]:
+                    if w in _MESSAGE_WORDS or w in _SERVICE_WORDS:
+                        break
+                    parts.append(w)
+                    if len(parts) == 2:
+                        break
+                if parts:
+                    pilot_callsign = " ".join(parts)
+            if not pilot_callsign:
+                _STATION_WORDS = {w.upper() for radio in ATC_FREQUENCIES for w in (radio.callsign or "").split()}
+                _STATION_WORDS.update(_SERVICE_WORDS)
+                for w in words_clean:
+                    if w not in _STATION_WORDS and w not in _MESSAGE_WORDS:
+                        pilot_callsign = w
+                        break
 
         # 3. Determine which radio/service this transmission is on
         radio_index = self._frequency_to_radio_index(frequency)
@@ -333,15 +358,14 @@ class ATCBot:
 
         # 5. Generate ATC response
 
-        # Use Tacview's own reference coordinates (sourced directly from DCS)
-        # when available; fall back to config values if Tacview hasn't connected yet
-        apt_lat = self.tacview.ref_lat or BOT_LAT
-        apt_lon = self.tacview.ref_lon or BOT_LON
+        apt_lat = BOT_LAT
+        apt_lon = BOT_LON
         ac_type = ""
         if pilot_callsign and pilot_callsign in self.state.strips:
             ac_type = self.state.strips[pilot_callsign].aircraft_type
         atc_snapshot = self.state.context_snapshot(airport_lat=apt_lat, airport_lon=apt_lon, requesting_aircraft_type=ac_type)
         traffic = self.tacview.traffic_summary(airport_lat=apt_lat, airport_lon=apt_lon, radius_nm=150.0)
+        logger.debug(f"Traffic summary ({len(self.tacview.objects)} Tacview objects, apt={apt_lat:.3f},{apt_lon:.3f}):\n{traffic}")
 
         response = await self.brain.respond(
             pilot_transmission=text,
@@ -389,7 +413,10 @@ class ATCBot:
         await self.srs.transmit(pcm_response, radio_index=radio_index)
 
         # 8. Open readback window for READBACK_WINDOW seconds
-        if pilot_callsign:
+        # Don't open a window for rejections — there's nothing to read back.
+        _rejection_phrases = ("unable", "negative", "no position data", "say again callsign", "standby")
+        _is_rejection = any(p in response.lower() for p in _rejection_phrases)
+        if pilot_callsign and not _is_rejection:
             import time as _time
             self._pending_readbacks[frequency] = {
                 "clearance":      response,
@@ -435,8 +462,8 @@ class ATCBot:
         sequence       = entry["sequence"]
         atc_callsign   = ATC_FREQUENCIES[radio_index].callsign or ATC_CALLSIGN
 
-        apt_lat = self.tacview.ref_lat or BOT_LAT
-        apt_lon = self.tacview.ref_lon or BOT_LON
+        apt_lat = BOT_LAT
+        apt_lon = BOT_LON
         ac_type = self.state.strips[pilot_callsign].aircraft_type if pilot_callsign in self.state.strips else ""
         atc_snapshot = self.state.context_snapshot(airport_lat=apt_lat, airport_lon=apt_lon, requesting_aircraft_type=ac_type)
         traffic      = self.tacview.traffic_summary(airport_lat=apt_lat, airport_lon=apt_lon, radius_nm=150.0)

@@ -89,10 +89,12 @@ class SRSAudioBot:
     def __init__(
         self,
         client: SRSClient,
-        on_audio_received: Optional[Callable[[bytes, float], None]] = None,
+        on_audio_received: Optional[Callable[[bytes, float, str], None]] = None,
     ):
         self.client = client
         self.on_audio_received = on_audio_received
+        # Registry of connected SRS clients: short_guid → DCS name ("103 | Creedmoor")
+        self._client_registry: dict[str, str] = {}
 
         self._tcp_reader: Optional[asyncio.StreamReader] = None
         self._tcp_writer: Optional[asyncio.StreamWriter] = None
@@ -148,6 +150,10 @@ class SRSAudioBot:
             await self._tcp_writer.wait_closed()
         if self._udp_sock:
             self._udp_sock.close()
+
+    def client_name(self, guid: str) -> str:
+        """Return the DCS name for a connected SRS client GUID, or empty string."""
+        return self._client_registry.get(guid, "")
 
     async def transmit(self, pcm_bytes: bytes, radio_index: int = 0):
         if not self._udp_sock:
@@ -227,14 +233,16 @@ class SRSAudioBot:
                 return  # own transmission
 
             primary_freq = frequencies[0][0] if frequencies else 0.0
+            name = self._client_registry.get(origin_guid, "")
             logger.debug(
                 f"Audio origin={origin_guid[:8]}.. freq={primary_freq/1e6:.3f}MHz "
                 f"freqs={len(frequencies)} audio={len(opus_data)}B"
+                + (f" name={name!r}" if name else "")
             )
 
             if self.on_audio_received and self._loop:
                 self._loop.call_soon_threadsafe(
-                    self.on_audio_received, opus_data, primary_freq
+                    self.on_audio_received, opus_data, primary_freq, origin_guid
                 )
 
         except Exception as e:
@@ -305,6 +313,28 @@ class SRSAudioBot:
                         logger.info("EAM authentication accepted.")
                     elif mt == MSG_EAM_DISCONNECT:
                         logger.error("EAM authentication REJECTED — check SRS_EAM_PASSWORD in .env")
+                    elif mt == MSG_SYNC:
+                        # Full client list — rebuild registry
+                        for c in msg.get("Clients") or []:
+                            guid = c.get("ClientGuid", "")
+                            name = c.get("Name", "")
+                            if guid and name and guid != self.client.short_guid:
+                                self._client_registry[guid] = name
+                        logger.debug(f"SRS registry synced: {len(self._client_registry)} clients")
+                    elif mt == MSG_UPDATE:
+                        c = msg.get("Client") or {}
+                        guid = c.get("ClientGuid", "")
+                        name = c.get("Name", "")
+                        if guid and name and guid != self.client.short_guid:
+                            if self._client_registry.get(guid) != name:
+                                logger.debug(f"SRS client update: {guid[:8]}.. = {name!r}")
+                            self._client_registry[guid] = name
+                    elif mt == MSG_CLIENT_DISCONNECT:
+                        c = msg.get("Client") or {}
+                        guid = c.get("ClientGuid", "")
+                        if guid and guid in self._client_registry:
+                            logger.debug(f"SRS client left: {self._client_registry[guid]!r}")
+                            del self._client_registry[guid]
                 except json.JSONDecodeError:
                     logger.debug(f"SRS non-JSON: {line[:80]!r}")
             except (asyncio.IncompleteReadError, ConnectionResetError):
