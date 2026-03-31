@@ -1,0 +1,12 @@
+# Core
+openai>=1.30.0
+openai-whisper>=20231117
+python-dotenv>=1.0.0
+
+# Audio
+opuslib>=3.0.1
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Note: Piper TTS is a standalone binary — no Python package needed.
+# Download from: https://github.com/rhasspy/piper/releases

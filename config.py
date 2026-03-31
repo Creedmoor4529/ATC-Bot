@@ -1,0 +1,133 @@
+import os
+import re
+import sys
+from dotenv import load_dotenv
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "components"))
+from airfield_db import (
+    lookup as _airfield_lookup,
+    mag_var_lookup as _mag_var_lookup,
+    preferred_runway as _preferred_runway,
+    runway_to_heading as _runway_to_heading,
+    tacan_lookup as _tacan_lookup,
+)
+
+load_dotenv()
+
+# ---------------------------------------------------------------------------
+# Lua config loader
+# Reads config.lua and returns a dict of key → value (str, int, or float).
+# Priority: config.lua overrides .env defaults; .env still wins for secrets.
+# ---------------------------------------------------------------------------
+
+def _load_lua_config(path: str) -> dict:
+    result = {}
+    if not os.path.exists(path):
+        return result
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("--"):
+                continue
+            # Strip inline comments
+            line = re.sub(r"\s*--.*$", "", line).strip()
+            m = re.match(r'^(\w+)\s*=\s*(.+)$', line)
+            if not m:
+                continue
+            key, raw = m.group(1), m.group(2).strip().rstrip(",")
+            if raw.startswith('"') or raw.startswith("'"):
+                result[key] = raw.strip('"\'')
+            else:
+                try:
+                    result[key] = int(raw) if "." not in raw else float(raw)
+                except ValueError:
+                    result[key] = raw
+    return result
+
+_LUA = _load_lua_config(os.path.join(os.path.dirname(__file__), "config.lua"))
+
+def _get(key: str, env_key: str, default, cast=str):
+    """Resolve value: config.lua > .env > default."""
+    if key in _LUA:
+        return cast(_LUA[key]) if not isinstance(_LUA[key], cast) else _LUA[key]
+    env_val = os.getenv(env_key)
+    if env_val is not None:
+        return cast(env_val)
+    return default
+
+# ---------------------------------------------------------------------------
+# AI provider — driven by config.lua, secrets from .env
+# ---------------------------------------------------------------------------
+AI_PROVIDER  = _get("AI_PROVIDER",  "AI_PROVIDER",  "openai", str).lower()
+OLLAMA_HOST  = _get("OLLAMA_HOST",  "OLLAMA_HOST",  "http://localhost:11434", str)
+
+_DEFAULT_MODELS = {"openai": "gpt-4o-mini", "groq": "llama-3.3-70b-versatile", "ollama": "llama3.1"}
+AI_MODEL = _get("AI_MODEL", "AI_MODEL", _DEFAULT_MODELS.get(AI_PROVIDER, "gpt-4o-mini"), str)
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+GROQ_API_KEY   = os.getenv("GROQ_API_KEY", "")
+
+# Legacy alias
+OPENAI_MODEL = AI_MODEL
+
+# SRS
+SRS_HOST         = os.getenv("SRS_HOST", "127.0.0.1")
+SRS_PORT         = int(os.getenv("SRS_PORT", "5002"))
+SRS_COALITION    = int(os.getenv("SRS_COALITION", "2"))
+SRS_EAM_PASSWORD = os.getenv("SRS_EAM_PASSWORD", "")
+
+# Tacview
+TACVIEW_HOST     = os.getenv("TACVIEW_HOST", "127.0.0.1")
+TACVIEW_PORT     = int(os.getenv("TACVIEW_PORT", "42674"))
+TACVIEW_PASSWORD = os.getenv("TACVIEW_PASSWORD", "")
+
+# Piper TTS
+PIPER_EXE   = os.getenv("PIPER_EXE",   "piper/piper.exe")
+PIPER_VOICE = os.getenv("PIPER_VOICE", "piper/voices/en_US-amy-medium.onnx")
+
+# Whisper
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "small")
+
+# Audio
+AUDIO_SAMPLE_RATE = 16000
+AUDIO_CHANNELS    = 1
+
+DCS_EXPORT_PORT = int(os.getenv("DCS_EXPORT_PORT", "15099"))
+
+# ---------------------------------------------------------------------------
+# Operational config — driven by config.lua, overridable via .env
+# ---------------------------------------------------------------------------
+
+ATC_CALLSIGN  = _get("ATC_CALLSIGN", "ATC_CALLSIGN", "ANAPA APPROACH", str)
+AIRPORT_ICAO  = _get("AIRPORT_ICAO",  "AIRPORT_ICAO",  "URKA",          str)
+ACTIVE_RUNWAY = _get("ACTIVE_RUNWAY", "ACTIVE_RUNWAY",
+                     _preferred_runway(AIRPORT_ICAO) or "28", str)
+MAGNETIC_VAR  = _get("MAGNETIC_VAR",  "MAGNETIC_VAR",
+                     _mag_var_lookup(AIRPORT_ICAO), float)
+
+# Resolve position: config.lua/env override → airfield DB → fallback zeros
+_db = _airfield_lookup(AIRPORT_ICAO)
+_db_lat, _db_lon, _db_elev = (_db if _db else (0.0, 0.0, 0))
+
+BOT_LAT              = _get("BOT_LAT",             "BOT_LAT",             _db_lat,  float)
+BOT_LON              = _get("BOT_LON",             "BOT_LON",             _db_lon,  float)
+BOT_ALT              = _get("BOT_ALT",             "BOT_ALT",             10000,    float)
+AIRPORT_ELEVATION_FT = _get("AIRPORT_ELEVATION_FT","AIRPORT_ELEVATION_FT",_db_elev, int)
+
+TACAN_CHANNEL        = _get("TACAN_CHANNEL",        "TACAN_CHANNEL",
+                             _tacan_lookup(AIRPORT_ICAO), str)
+TACAN_INBOUND_COURSE = _get("TACAN_INBOUND_COURSE", "TACAN_INBOUND_COURSE",
+                             _runway_to_heading(ACTIVE_RUNWAY), int)
+TACAN_MDA_FT         = _get("TACAN_MDA_FT",         "TACAN_MDA_FT",
+                             AIRPORT_ELEVATION_FT + 400, int)
+MSA_FT               = _get("MSA_FT",               "MSA_FT",
+                             max(2000, AIRPORT_ELEVATION_FT + 1000), int)
+
+FREQ_APPROACH   = _get("FREQ_APPROACH",   "FREQ_APPROACH",   123600000, float)
+FREQ_APPROACH_2 = _get("FREQ_APPROACH_2", "FREQ_APPROACH_2", 236000000, float)
+FREQ_TOWER      = _get("FREQ_TOWER",      "FREQ_TOWER",      122100000, float)
+FREQ_TOWER_2    = _get("FREQ_TOWER_2",    "FREQ_TOWER_2",    257800000, float)
+FREQ_GROUND     = _get("FREQ_GROUND",     "FREQ_GROUND",     121900000, float)
+FREQ_GROUND_2   = _get("FREQ_GROUND_2",   "FREQ_GROUND_2",   275800000, float)
+
+INSTRUCTIONS = _get("INSTRUCTIONS", "INSTRUCTIONS", "", str)

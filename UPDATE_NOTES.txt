@@ -1,0 +1,108 @@
+================================================================================
+  ATC BOT — UPDATE PROCESS NOTES
+================================================================================
+
+OVERVIEW
+────────
+Updates are delivered via git. Running update.bat will:
+  1. Pull the latest code from the remote repository
+  2. Update Python dependencies (requirements.txt)
+  3. Rebuild ATC Bot.exe using PyInstaller
+  4. Replace the existing ATC Bot.exe in the project root
+
+The .exe is only a launcher — it finds Python and runs main.py from the same
+folder. It only needs rebuilding if launcher.py changes. All other code changes
+(main.py, config.py, components/, etc.) take effect immediately without a
+rebuild.
+
+--------------------------------------------------------------------------------
+
+PREREQUISITES
+─────────────
+  • Git for Windows          — https://git-scm.com/download/win
+  • Python 3.11+             — https://python.org
+  • pip (bundled with Python)
+  • Internet access to the remote git repository
+
+--------------------------------------------------------------------------------
+
+HOW TO UPDATE
+─────────────
+  1. Close ATC Bot if it is running.
+  2. Double-click update.bat  (or run it from a terminal).
+  3. Watch for errors — each step is numbered.
+  4. When complete, launch ATC Bot.exe as normal.
+
+Do NOT update while a DCS session is active. Close the bot first.
+
+--------------------------------------------------------------------------------
+
+WHAT IS NOT OVERWRITTEN BY AN UPDATE
+──────────────────────────────────────
+  config.lua       — your airfield, callsign, and frequency settings
+  .env             — your API keys and connection settings
+  bot.log          — log history
+
+These files are intentionally excluded from version control (.gitignore) and
+will never be overwritten by git pull or the updater.
+
+--------------------------------------------------------------------------------
+
+WHAT IS OVERWRITTEN
+────────────────────
+  All .py source files, components/, dcs_atc_export.lua, requirements.txt,
+  and ATC Bot.exe are replaced with the latest versions.
+
+  If you have made local edits to any tracked file, git pull will either
+  merge them or report a conflict. Resolve conflicts before running the
+  updater again.
+
+--------------------------------------------------------------------------------
+
+MANUAL UPDATE (without the bat file)
+──────────────────────────────────────
+  Open a terminal in the project folder and run:
+
+    git pull
+    pip install -r requirements.txt
+    pyinstaller --onefile --noconsole --name "ATC Bot" launcher.py
+    copy dist\ATC Bot.exe "ATC Bot.exe"
+
+--------------------------------------------------------------------------------
+
+FIRST-TIME SETUP (remote repository)
+──────────────────────────────────────
+  The updater requires the project to be linked to a remote git repository.
+  If this is a fresh install cloned from the remote, it is already configured.
+
+  If you set up the project manually (not via clone), run once:
+
+    git remote add origin <repository-url>
+    git branch -M main
+    git push -u origin main
+
+  After that, update.bat will work normally.
+
+--------------------------------------------------------------------------------
+
+TROUBLESHOOTING
+───────────────
+  "git not found"
+      Install Git for Windows and ensure it is added to PATH during install.
+
+  "git pull failed — conflicts"
+      You have local edits to tracked files. Either stash them (git stash)
+      or commit them before updating.
+
+  "pip install failed"
+      Check your internet connection. If behind a proxy, configure pip proxy:
+        pip install --proxy http://user:pass@proxy:port -r requirements.txt
+
+  "PyInstaller build failed"
+      Ensure all requirements are installed and Python is 3.11+.
+      Check the terminal output for the specific error.
+
+  "ATC Bot.exe not found in dist\"
+      The build failed silently — scroll up for the PyInstaller error.
+
+================================================================================

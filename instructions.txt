@@ -1,0 +1,8 @@
+# Custom ATC instructions for this airfield.
+# Add any site-specific rules, procedures, or personality here.
+# Lines starting with # are ignored by the bot.
+# Examples:
+#   - Preferred departure routes
+#   - Local traffic patterns
+#   - Special procedures
+#   - Callsign aliases or local callsigns

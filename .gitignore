@@ -1,0 +1,31 @@
+.env
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.wav
+*.onnx
+piper/
+AIRFIELD_NAVAIDS.txt
+
+# Compiled launcher
+*.exe
+
+# PyInstaller
+*.spec
+
+# Runtime logs
+*.log
+
+# Personal notes
+notes*.txt
+
+# Binary dependencies
+opus.dll
+opus.tar.gz
+
+# Claude local memory
+.claude/

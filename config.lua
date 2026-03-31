@@ -1,0 +1,165 @@
+-- DCS ATC Bot — Operational Configuration
+-- Edit this file to configure the bot for your airfield.
+-- Restart the bot after making changes.
+
+-- =========================================================================
+-- AIRFIELD REFERENCE — set AIRPORT_ICAO to any code below.
+-- Coordinates and elevation are auto-resolved from the lookup table.
+-- =========================================================================
+--
+-- CAUCASUS
+--   UGSB  Batumi                    UGKS  Kobuleti
+--   UGSN  Senaki-Kolkhi             UGKO  Kutaisi
+--   UGSS  Sukhumi (Babushara)       UGKG  Gudauta
+--   UGTB  Tbilisi-Lochini           URKA  Anapa
+--   URSS  Sochi-Adler               URKH  Maykop-Khanskaya
+--   URKG  Krymsk                    URRR  Krasnodar-Center
+--   URKK  Krasnodar-Pashkovsky      URMM  Mineralnye Vody
+--   URMO  Beslan (Vladikavkaz)      URKN  Nalchik
+--   URMZ  Mozdok                    URMG  Gelendzhik
+--
+-- PERSIAN GULF
+--   OMAD  Al Dhafra AB              OMAA  Abu Dhabi International
+--   OMDM  Al Minhad AB              OMDB  Dubai International
+--   OMSJ  Sharjah                   OMFJ  Fujairah
+--   OMRK  Ras Al Khaimah            OOKB  Khasab
+--   OOMS  Muscat-Seeb               OIKB  Bandar Abbas
+--   OIBL  Bandar Lengeh             OIBS  Sirri Island
+--   OIBA  Abu Musa Island           OIBP  Lavan Island
+--   OIKQ  Qeshm Island
+--
+-- SYRIA
+--   OSAP  Aleppo                    OSLK  Latakia (Basil Al Assad)
+--   OSDI  Damascus                  OSJI  Jirah
+--   OSPR  Palmyra (Tadmur)          OSTI  Tiyas (T4)
+--   OSSH  Shayrat                   OSKH  Khalkhalah
+--   OLBA  Beirut                    LCLK  Larnaca
+--   LCPH  Paphos                    LCRA  RAF Akrotiri
+--   LLBG  Tel Aviv Ben Gurion
+--   LLHB  Hatzerim AB               LLOV  Ovda
+--   LLNV  Nevatim                   LLRD  Ramat David
+--   LTAG  Incirlik AB               LTAF  Adana Sakirpasa
+--   LTAJ  Gaziantep                 OJMF  Muwaffaq Salti (Azraq)
+--
+-- NEVADA (NTTR)
+--   KLSV  Nellis AFB                KLAS  Las Vegas McCarran
+--   KTNX  Tonopah Test Range        KINS  Creech AFB
+--   KVGT  North Las Vegas           KBTY  Beatty
+--   KIFP  Laughlin/Bullhead
+--
+-- MARIANA ISLANDS
+--   PGUM  Guam (Won Pat)            PGUA  Andersen AFB
+--   PGRO  Rota                      PGSN  Saipan
+--   PGFT  Tinian North
+--
+-- NORMANDY
+--   LFRC  Cherbourg-Maupertus       LFRK  Caen-Carpiquet
+--   LFOH  Le Havre-Octeville        LFQA  Laon-Couvron
+--   LFQB  Troyes-Barberey           LFOE  Evreux-Fauville
+--   LFPG  Paris Charles de Gaulle   LFPB  Paris Le Bourget
+--
+-- THE CHANNEL
+--   EGMH  Manston                   EGKB  Biggin Hill
+--   EGLF  Farnborough               EGMC  Southend
+--   LFQQ  Lille-Lesquin             LFAY  Amiens-Glisy
+--   LFAK  Denain-Prouvy
+--
+-- SOUTH ATLANTIC
+--   EGYP  Mount Pleasant            SAWG  Rio Gallegos
+--   SAWE  Rio Grande                SAVT  Ushuaia Malvinas
+--
+-- SINAI
+--   HEAR  El Arish                  HECW  Cairo West
+--   HECA  Cairo International       HEGN  Hurghada
+--   HESH  Sharm el-Sheikh           HESC  St. Catherine
+--   LLRM  Ramon                     HETB  Bir Hasana
+--
+-- AFGHANISTAN
+--   OAKS  Kandahar                  OAKB  Kabul
+--   OAIX  Bagram                    OAHN  Herat
+--   OAMN  Zaranj
+--
+-- KOLA
+--   ENBO  Bodø                      ENEV  Evenes (Harstad/Narvik)
+--   ENLK  Leknes                    ENKR  Kirkenes
+--   ENMH  Mehamn                    ULKK  Murmansk
+--   ULMK  Monchegorsk               ULAS  Severomorsk-1
+--   ULAM  Severomorsk-3             ULWC  Olenya
+--
+-- =========================================================================
+
+-- =========================================================================
+-- REQUIRED — set these values for your airfield
+-- =========================================================================
+
+AIRPORT_ICAO  = "LCRA"      -- ICAO code from the list above
+ATC_CALLSIGN  = "Akrotiri"  -- Callsign used on SRS and in ATC responses
+
+-- Radio frequencies in Hz. Set all six values for your airfield.
+-- Approach/Tower/Ground can share a frequency — pilots only need one to tune.
+-- _2 frequencies are secondary (UHF military band). Set to 0 to disable.
+FREQ_APPROACH   = 119000000   -- Approach primary   (VHF, Hz)
+FREQ_APPROACH_2 = 257000000   -- Approach secondary (UHF, Hz)  — 0 to disable
+FREQ_TOWER      = 119500000   -- Tower primary      (VHF, Hz)
+FREQ_TOWER_2    = 257500000   -- Tower secondary    (UHF, Hz)  — 0 to disable
+FREQ_GROUND     = 118000000   -- Ground primary     (VHF, Hz)
+FREQ_GROUND_2   = 258000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
+
+-- =========================================================================
+-- OPTIONAL OVERRIDES
+-- Everything below is auto-resolved from the airfield database.
+-- Remove the leading "--" on any line to override the automatic value.
+-- =========================================================================
+
+-- Active runway (auto: primary ILS runway from database)
+-- ACTIVE_RUNWAY = "28"
+
+-- Magnetic variation in degrees east (auto: by map region)
+-- MAGNETIC_VAR = 4.5
+
+-- Airport elevation in feet (auto: from database)
+-- AIRPORT_ELEVATION_FT = 76
+
+-- Minimum safe altitude — lowest clearable altitude except on established approach
+-- (auto: airport elevation + 1000 ft, minimum 2000 ft)
+-- Raise this for mountainous terrain. Caucasus rough guide: coastal ~2000 ft, mountains ~6000-8000 ft.
+-- MSA_FT = 2000
+
+-- Bot SRS position (auto: resolved from AIRPORT_ICAO)
+-- BOT_LAT = 34.590
+-- BOT_LON = 32.987
+-- BOT_ALT = 10000
+
+-- -------------------------------------------------------------------------
+-- TACAN Approach
+-- Disabled by default. Set TACAN_CHANNEL to enable.
+-- Inbound course and MDA are auto-derived when not set.
+-- -------------------------------------------------------------------------
+-- TACAN_CHANNEL = "107X"       -- auto: from airfield database; override if needed
+-- TACAN_INBOUND_COURSE = 280   -- auto: active runway heading in degrees
+-- TACAN_MDA_FT = 476           -- auto: airport elevation + 400 ft
+
+-- -------------------------------------------------------------------------
+-- AI Provider
+-- -------------------------------------------------------------------------
+-- Choose one: "openai", "groq", or "ollama"
+-- openai  — requires OPENAI_API_KEY in .env
+-- groq    — requires GROQ_API_KEY in .env  (free tier at console.groq.com)
+-- ollama  — runs locally, no API key needed (install from ollama.com)
+AI_PROVIDER = "openai"
+
+-- Model to use for the selected provider. Leave commented to use the default.
+--   openai  default: gpt-4o-mini
+--   groq    default: llama-3.3-70b-versatile
+--   ollama  default: llama3.1
+-- AI_MODEL = "gpt-4o-mini"
+
+-- Ollama host (only used when AI_PROVIDER = "ollama")
+-- OLLAMA_HOST = "http://localhost:11434"
+
+-- -------------------------------------------------------------------------
+-- Custom Instructions (optional)
+-- Added to the ATC brain system prompt at startup.
+-- Use this to describe local procedures, traffic patterns, or special rules.
+-- -------------------------------------------------------------------------
+-- INSTRUCTIONS = "Expect fast jet traffic. Prefer straight-in approaches on runway 28. All aircraft report 10 nautical miles."
