@@ -60,7 +60,22 @@ Then edit `config.lua` to match your airfield and preferences (see Configuration
 
 ### 5. Enable Tacview real-time telemetry
 
-In Tacview: **Options → Real-Time Telemetry → Enable**. The default port is 42674.
+On a dedicated server, Tacview is configured via `options.lua` rather than the GUI. Open:
+
+```
+%USERPROFILE%\Saved Games\DCS_DEDICATED_SERVER\Config\Options.lua
+```
+
+Find the `["Tacview"]` block inside `["plugins"]` and set the following values:
+
+```lua
+["tacviewRealTimeTelemetryEnabled"] = true,
+["tacviewRealTimeTelemetryPort"] = "42674",
+["tacviewRemoteControlEnabled"] = true,
+["tacviewRemoteControlPort"] = "42675",
+```
+
+If the `["Tacview"]` block does not exist, add it inside the `["plugins"]` table. Leave `["tacviewRealTimeTelemetryPassword"]` and `["tacviewRemoteControlPassword"]` as empty strings unless you want password protection.
 
 ---
 
