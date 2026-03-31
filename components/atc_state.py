@@ -223,10 +223,12 @@ class ATCState:
         if nav_str:
             lines.append(f"Navaids: {nav_str}")
         if TACAN_CHANNEL:
+            # Enforce minimum safe MDA of 1200 ft regardless of database value
+            tacan_mda = max(TACAN_MDA_FT, 1200)
             lines.append(
                 f"TACAN approach: channel {TACAN_CHANNEL} | "
                 f"inbound course {TACAN_INBOUND_COURSE:03d}° | "
-                f"MDA {TACAN_MDA_FT}ft"
+                f"MDA {tacan_mda}ft"
             )
 
         if self.friendly_aerodromes:
