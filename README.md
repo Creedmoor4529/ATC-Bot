@@ -41,7 +41,7 @@ The install script will:
 
 1. Copy `dcs_atc_export.lua` to:
    ```
-   %USERPROFILE%\Saved Games\DCS\Scripts\Hooks\
+   %USERPROFILE%\Saved Games\DCS_Server Instance\Scripts\Hooks\
    ```
 2. Open the file and set `BOT_HOST`:
    - Same machine as DCS: `"127.0.0.1"`
@@ -207,7 +207,7 @@ No changes needed — SRS already connects to a hostname/IP and works over the i
 Your `.env` file may be overriding `config.lua`. Remove any `ATC_CALLSIGN`, `AIRPORT_ICAO`, or frequency entries from `.env` — these should only be in `config.lua`.
 
 **No weather data**
-Check `%USERPROFILE%\Saved Games\DCS\Logs\atc_export.log`. If it shows `socket=false`, the DCS Lua socket library is not available. Ensure DCS is not in a restricted export mode.
+Check `%USERPROFILE%\Saved Games\DCS_Server Instance\Logs\atc_export.log`. If it shows `socket=false`, the DCS Lua socket library is not available. Ensure DCS is not in a restricted export mode.
 
 **STT not transcribing**
 Whisper downloads the model on first run — this may take a minute. Check `bot.log` for errors.
@@ -228,7 +228,7 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 |------|---------|
 | `config.lua` | Main user configuration — airfield, callsign, frequencies, AI provider |
 | `.env` | Secret keys (API keys, server addresses) — never committed to git |
-| `dcs_atc_export.lua` | DCS Lua hook — install to Saved Games/Scripts/Hooks/ |
+| `dcs_atc_export.lua` | DCS Lua hook — install to Saved Games/DCS_Server Instance/Scripts/Hooks/ |
 | `main.py` | Bot entry point and audio pipeline |
 | `components/atc_brain.py` | LLM interface — generates ATC responses |
 | `components/atc_state.py` | Tracks aircraft strips, squawks, runway state |
