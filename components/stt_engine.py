@@ -21,8 +21,13 @@ def _load_model():
     global _model
     if _model is None:
         logger.info(f"Loading faster-whisper model: {WHISPER_MODEL}")
-        _model = WhisperModel(WHISPER_MODEL, device="auto", compute_type="auto")
-        logger.info("faster-whisper model loaded.")
+        try:
+            _model = WhisperModel(WHISPER_MODEL, device="cuda", compute_type="auto")
+            logger.info("faster-whisper model loaded (CUDA).")
+        except Exception:
+            logger.info("CUDA not available, falling back to CPU.")
+            _model = WhisperModel(WHISPER_MODEL, device="cpu", compute_type="int8")
+            logger.info("faster-whisper model loaded (CPU, int8).")
     return _model
 
 
