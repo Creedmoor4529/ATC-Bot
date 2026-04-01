@@ -1,14 +1,14 @@
 """
-Speech-to-text engine using OpenAI Whisper (small model).
+Speech-to-text engine using faster-whisper (CTranslate2).
 
 Accepts raw PCM audio bytes (16-bit, 16kHz, mono) and returns a transcript.
-Runs Whisper in a thread pool so it doesn't block the async event loop.
+Runs transcription in a thread pool so it doesn't block the async event loop.
 """
 
 import asyncio
 import logging
 import numpy as np
-import whisper
+from faster_whisper import WhisperModel
 
 from config import WHISPER_MODEL
 
@@ -20,9 +20,9 @@ _model = None
 def _load_model():
     global _model
     if _model is None:
-        logger.info(f"Loading Whisper model: {WHISPER_MODEL}")
-        _model = whisper.load_model(WHISPER_MODEL)
-        logger.info("Whisper model loaded.")
+        logger.info(f"Loading faster-whisper model: {WHISPER_MODEL}")
+        _model = WhisperModel(WHISPER_MODEL, device="auto", compute_type="auto")
+        logger.info("faster-whisper model loaded.")
     return _model
 
 
@@ -33,13 +33,12 @@ def _transcribe_sync(pcm_bytes: bytes) -> str:
     # Convert 16-bit PCM bytes to float32 numpy array normalised to [-1, 1]
     audio_np = np.frombuffer(pcm_bytes, dtype=np.int16).astype(np.float32) / 32768.0
 
-    result = model.transcribe(
+    segments, _info = model.transcribe(
         audio_np,
         language="en",
-        fp16=False,
         condition_on_previous_text=False,
     )
-    text = result.get("text", "").strip()
+    text = " ".join(seg.text.strip() for seg in segments).strip()
     logger.debug(f"Transcript: {text!r}")
     return text
 

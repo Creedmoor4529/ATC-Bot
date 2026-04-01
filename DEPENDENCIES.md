@@ -37,7 +37,7 @@ Installed automatically by `install.bat` / `install.sh` via `pip install -r requ
 | Package | Purpose |
 |---------|---------|
 | `openai>=1.30.0` | OpenAI and Groq API client |
-| `openai-whisper>=20231117` | Speech-to-text (STT) |
+| `faster-whisper>=1.1.0` | Speech-to-text (STT) via CTranslate2 |
 | `python-dotenv>=1.0.0` | `.env` file loading |
 | `opuslib>=3.0.1` | Opus audio codec (SRS audio) |
 | `numpy>=1.24.0` | Audio array processing |
@@ -53,7 +53,7 @@ These are fetched by `install.bat` / `install.sh` and do not need to be installe
 |-----------|-----------|--------|
 | **Piper TTS** | Text-to-speech binary (`piper/piper.exe`) | [github.com/rhasspy/piper](https://github.com/rhasspy/piper/releases) |
 | **en_US-amy-medium voice** | Piper voice model (`.onnx` + `.onnx.json`) | HuggingFace rhasspy/piper-voices |
-| **Whisper model** | `small` model weights — downloaded on first run | OpenAI via `openai-whisper` package |
+| **Whisper model** | `distil-large-v3` weights — downloaded on first run | HuggingFace via `faster-whisper` package |
 
 ---
 

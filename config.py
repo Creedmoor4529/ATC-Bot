@@ -86,7 +86,7 @@ PIPER_EXE   = os.getenv("PIPER_EXE",   "piper/piper.exe")
 PIPER_VOICE = os.getenv("PIPER_VOICE", "piper/voices/en_US-amy-medium.onnx")
 
 # Whisper
-WHISPER_MODEL = os.getenv("WHISPER_MODEL", "medium")
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "distil-large-v3")
 
 # Audio
 AUDIO_SAMPLE_RATE = 16000
