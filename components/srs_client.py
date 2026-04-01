@@ -111,7 +111,7 @@ class SRSAudioBot:
     # ------------------------------------------------------------------
 
     async def connect(self):
-        self._loop = asyncio.get_event_loop()
+        self._loop = asyncio.get_running_loop()
         logger.info(f"Connecting to SRS at {SRS_HOST} ({_SRS_IP}):{SRS_PORT}")
         logger.info(f"Bot GUID short={self.client.short_guid}  long={self.client.long_guid}")
 

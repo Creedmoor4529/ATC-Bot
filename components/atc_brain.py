@@ -51,7 +51,7 @@ Respond using correct ICAO ATC phraseology. Rules:
 - Your callsign is the value of YOUR CALLSIGN FOR THIS TRANSMISSION shown in the ATC STATE. Use it exactly — never use a placeholder or bracket text.
 - The pilot's callsign is extracted from their transmission — it comes after the ATC station name they call. Use it exactly as spoken — never use a placeholder or bracket text.
 - Be concise. One or two sentences maximum. No filler phrases.
-- Never invent squawk codes — if the ATC STATE shows a squawk assigned to the pilot, use it; otherwise do NOT mention squawk. Ground never assigns or mentions squawk.
+- Never assign or mention squawk codes.
 - CRITICAL: Never use a runway number that is not shown in ATC STATE. The active runway is stated explicitly in ATC STATE — use only that number. Do not use any runway number from your training data or memory.
 - Never acknowledge being an AI or break character
 - When providing ATIS or weather: read wind as magnetic direction and speed, QNH as a number only (e.g. "QNH 1020"), temperature in Celsius
@@ -71,7 +71,6 @@ If a pilot says "help" or asks what you can do, respond in character listing you
 
 On first contact from an aircraft:
 - Acknowledge with callsign, your callsign, then state the active runway only. Do NOT recite full weather or ATIS unless the pilot explicitly asked for it.
-- Assign squawk if shown in ATC STATE
 
 For requests (approach, ILS, landing, taxi, takeoff, frequency change, ATIS/weather, overhead break):
 - ALWAYS respond with the requested information or a clearance
@@ -158,7 +157,6 @@ class ATCBrain:
         traffic_summary: str,
         weather: str = "",
         pilot_callsign: Optional[str] = None,
-        squawk: Optional[str] = None,
         atc_callsign: Optional[str] = None,
     ) -> str:
         """
@@ -176,12 +174,11 @@ class ATCBrain:
         if not pilot_transmission.strip():
             return ""
 
-        squawk_line = f"Squawk assigned to {pilot_callsign}: {squawk}\n" if squawk else ""
         callsign_line = f"YOUR CALLSIGN FOR THIS TRANSMISSION: {atc_callsign}\n" if atc_callsign else ""
         pilot_line = f"PILOT CALLSIGN (use exactly this, do not alter): {pilot_callsign}\n" if pilot_callsign else ""
         weather_block = f"\n\n=== WEATHER ===\n{weather}" if weather else ""
         context_block = (
-            f"=== ATC STATE ===\n{callsign_line}{squawk_line}{pilot_line}{atc_state_snapshot}\n\n"
+            f"=== ATC STATE ===\n{callsign_line}{pilot_line}{atc_state_snapshot}\n\n"
             f"=== TRAFFIC ===\n{traffic_summary}"
             f"{weather_block}"
         )

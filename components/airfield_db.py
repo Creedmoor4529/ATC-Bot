@@ -266,8 +266,9 @@ def _on_runway(
         return False
 
     runways = RUNWAYS.get(icao.upper(), [])
-    for lat1, lon1, lat2, lon2 in [(r[0], r[1], r[2], r[3]) for r in runways]:
-        width_m = runways[0][4] if runways else 75
+    for r in runways:
+        lat1, lon1, lat2, lon2 = r[0], r[1], r[2], r[3]
+        width_m = r[4]
 
         # Midpoint for local projection
         clat = (lat1 + lat2) / 2.0
@@ -993,7 +994,7 @@ def freq_lookup(icao: str) -> tuple[float, float | None] | None:
 _RUSSIAN_PATTERNS = {
     "su-", "su_", "mig-", "mig_", "yak-", "yak_", "il-", "il_",
     "tu-", "tu_", "an-", "an_", "be-", "be_", "ka-", "ka_",
-    "mi-", "mi_", "l-39", "l39", "m-2000",  # M-2000 is French but uses similar avionics in some DCS contexts
+    "mi-", "mi_", "l-39", "l39",
     "su27", "su33", "su25", "su24", "su34", "su30", "su57",
     "mig21", "mig23", "mig25", "mig29", "mig31",
 }
@@ -1016,6 +1017,9 @@ def classify_aircraft(aircraft_type: str) -> str:
     if not aircraft_type:
         return "nato"
     t = aircraft_type.lower()
+    for pat in _NATO_PATTERNS:
+        if pat in t:
+            return "nato"
     for pat in _RUSSIAN_PATTERNS:
         if pat in t:
             return "russian"

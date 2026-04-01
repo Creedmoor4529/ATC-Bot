@@ -51,7 +51,7 @@ async def transcribe(pcm_bytes: bytes) -> str:
     """
     if not pcm_bytes:
         return ""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     try:
         text = await loop.run_in_executor(None, _transcribe_sync, pcm_bytes)
         return text

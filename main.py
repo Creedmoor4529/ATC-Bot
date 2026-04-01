@@ -98,13 +98,13 @@ class AudioAccumulator:
             self._frequency = frequency
             if not self._guid:
                 self._guid = guid  # capture GUID from first packet of transmission
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Opus decode error: {e}")
 
         # Reset silence timer
         if self._silence_task and not self._silence_task.done():
             self._silence_task.cancel()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         self._silence_task = loop.create_task(self._silence_expire())
 
     async def _silence_expire(self):
@@ -159,7 +159,7 @@ class ATCBot:
             sys.exit(1)
 
         logger.info("Preloading Whisper STT model...")
-        await asyncio.get_event_loop().run_in_executor(None, preload_whisper)
+        await asyncio.get_running_loop().run_in_executor(None, preload_whisper)
 
         logger.info("Starting DCS weather export listener...")
         await self.dcs_export.start()
@@ -349,12 +349,9 @@ class ATCBot:
         radio_index = self._frequency_to_radio_index(frequency)
         atc_callsign = ATC_FREQUENCIES[radio_index].callsign or ATC_CALLSIGN
 
-        # 4. Update ATC state; assign squawk on Approach/Tower only (Ground never issues squawk)
-        squawk = None
+        # 4. Update ATC state
         if pilot_callsign:
             self.state.update_strip_contact(pilot_callsign)
-            if not atc_callsign.upper().endswith("GROUND"):
-                squawk = self.state.assign_squawk(pilot_callsign)
 
         # 5. Generate ATC response
 
@@ -373,7 +370,6 @@ class ATCBot:
             traffic_summary=traffic,
             weather=self.weather.snapshot(),
             pilot_callsign=pilot_callsign,
-            squawk=squawk,
             atc_callsign=atc_callsign,
         )
         if not response:
@@ -455,7 +451,7 @@ class ATCBot:
         entry = self._altitude_hold_queue.pop(0)
         # Re-number remaining entries
         for i, e in enumerate(self._altitude_hold_queue):
-            e["sequence"] = i + 2
+            e["sequence"] = i + 1
 
         pilot_callsign = entry["callsign"]
         radio_index    = entry["radio_index"]
@@ -513,7 +509,7 @@ class ATCBot:
 async def main():
     bot = ATCBot()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     def _shutdown():
         logger.info("Shutdown signal received.")

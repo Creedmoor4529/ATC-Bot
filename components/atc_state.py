@@ -46,7 +46,6 @@ class FlightPhase(Enum):
 class FlightStrip:
     callsign: str
     aircraft_type: str = "UNKN"
-    squawk: str = "2000"
     phase: FlightPhase = FlightPhase.UNKNOWN
     departure: str = ""
     destination: str = ""
@@ -97,8 +96,6 @@ class ATCState:
         self.airport_icao: str = AIRPORT_ICAO
         self.active_runway: RunwayState = RunwayState(designator=ACTIVE_RUNWAY)
         self.strips: Dict[str, FlightStrip] = {}
-        self._squawk_counter: int = 7001
-
         # Queues
         self.departure_queue: List[str] = []     # callsigns waiting for takeoff
         self.arrival_sequence: List[str] = []    # callsigns on approach sequence
@@ -119,15 +116,6 @@ class ATCState:
     def update_strip_contact(self, callsign: str):
         strip = self.get_or_create_strip(callsign)
         strip.last_contact = time.time()
-
-    def assign_squawk(self, callsign: str) -> str:
-        strip = self.get_or_create_strip(callsign)
-        if strip.squawk == "2000":
-            strip.squawk = str(self._squawk_counter)
-            self._squawk_counter += 1
-            if self._squawk_counter > 7077:
-                self._squawk_counter = 7001
-        return strip.squawk
 
     # ------------------------------------------------------------------
     # Runway management
@@ -251,8 +239,7 @@ class ATCState:
                     dist_str = f" | DIST {dist:.0f}nm"
                 lines.append(
                     f"  {s.callsign} | {s.aircraft_type} | {s.phase.value} | "
-                    f"ALT {s.altitude_actual:.0f}ft | HDG {s.heading:.0f} | "
-                    f"SQK {s.squawk}{dist_str}"
+                    f"ALT {s.altitude_actual:.0f}ft | HDG {s.heading:.0f}{dist_str}"
                 )
 
         return "\n".join(lines)

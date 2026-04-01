@@ -130,7 +130,7 @@ async def synthesize(text: str) -> bytes:
     if not text.strip():
         return b""
     text = _expand_numbers(text)
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     try:
         pcm = await loop.run_in_executor(None, _run_piper_sync, text)
         return pcm
