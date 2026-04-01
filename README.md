@@ -114,6 +114,26 @@ All operational settings are in `config.lua`. The file is self-documented with a
 
 Set `AI_PROVIDER` in `config.lua` to switch between them.
 
+### Speech-to-Text (Whisper) Models
+
+The bot uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper) for speech recognition. Set `WHISPER_MODEL` in your `.env` to choose a model (default: `distil-large-v3`).
+
+| Model | Size | Speed | Accuracy | VRAM |
+|-------|------|-------|----------|------|
+| `tiny` | 75 MB | Fastest | Low | ~1 GB |
+| `base` | 142 MB | Very fast | Fair | ~1 GB |
+| `small` | 466 MB | Fast | Good | ~2 GB |
+| `medium` | 1.5 GB | Moderate | Very good | ~5 GB |
+| `large-v3` | 3.1 GB | Slow | Best | ~10 GB |
+| `distil-large-v3` | 1.5 GB | Fast | Near-best | ~4 GB |
+
+Example `.env` setting:
+```
+WHISPER_MODEL=small
+```
+
+Models are downloaded automatically from HuggingFace on first run. Smaller models are faster but less accurate — `distil-large-v3` offers the best speed/accuracy tradeoff for ATC use.
+
 ### Custom Instructions
 
 Add site-specific ATC rules to the `INSTRUCTIONS` field in `config.lua`:

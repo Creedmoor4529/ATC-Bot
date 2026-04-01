@@ -40,9 +40,7 @@ def main():
         log.write(f"Script: {script}\n\n")
         log.flush()
 
-        kwargs = {"stdout": log, "stderr": subprocess.STDOUT, "cwd": here}
-        if sys.platform == "win32":
-            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        kwargs = {"cwd": here}
         proc = subprocess.Popen([python, script], **kwargs)
         proc.wait()
         log.write(f"\nBot exited with code {proc.returncode} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")

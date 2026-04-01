@@ -49,7 +49,7 @@ echo.
 echo [3/4] Rebuilding ATC Bot.exe...
 echo.
 python -m pip install pyinstaller --quiet
-pyinstaller --onefile --noconsole --name "ATC Bot" launcher.py --distpath dist --workpath build --noconfirm
+pyinstaller --onefile --console --name "ATC Bot" launcher.py --distpath dist --workpath build --noconfirm
 if errorlevel 1 (
     echo [ERROR] PyInstaller build failed.
     goto :fail
