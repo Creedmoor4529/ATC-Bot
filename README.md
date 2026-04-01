@@ -221,6 +221,36 @@ No changes needed — SRS already connects to a hostname/IP and works over the i
 
 ---
 
+## System Requirements
+
+The bot runs alongside DCS World. The heaviest local component is **faster-whisper** (speech-to-text) — everything else is lightweight.
+
+### Minimum (CPU-only, no dedicated GPU)
+
+| Component | Requirement |
+|-----------|-------------|
+| **CPU** | 4-core, Intel 8th gen+ / Ryzen 2000+ |
+| **RAM** | 8 GB |
+| **GPU** | None required (Whisper runs on CPU, but slower) |
+| **Storage** | ~2 GB for models + Python environment |
+
+> On CPU-only systems, transcription with `distil-large-v3` will be slow (~3-5x real-time). Set `WHISPER_MODEL=small` or `base` in `.env` for faster results at the cost of accuracy.
+
+### Recommended (with NVIDIA GPU)
+
+| Component | Requirement |
+|-----------|-------------|
+| **CPU** | 4+ cores |
+| **RAM** | 16 GB |
+| **GPU** | NVIDIA with 4+ GB VRAM and CUDA support (e.g. GTX 1650 / RTX 3050) |
+| **Storage** | ~2 GB for models + Python environment |
+
+The bot auto-detects GPU availability (`device="auto"` in faster-whisper). With a CUDA-capable GPU, transcription is near real-time.
+
+**Bottom line:** If your machine can run DCS, it can run the bot — especially with a smaller Whisper model like `small` or `base`.
+
+---
+
 ## Troubleshooting
 
 **Bot shows wrong callsign / old airfield name**
