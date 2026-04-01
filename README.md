@@ -1,6 +1,6 @@
 # DCS ATC Bot
 
-An AI-powered air traffic controller for DCS World. The bot listens on SRS radio frequencies, transcribes pilot transmissions using Whisper STT, generates realistic ATC responses using an LLM, and broadcasts them back over SRS using Piper TTS.
+An AI-powered air traffic controller for DCS World. The bot listens on SRS radio frequencies, transcribes pilot transmissions using faster-whisper STT, generates realistic ATC responses using an LLM, and broadcasts them back over SRS using Piper TTS.
 
 ---
 
@@ -143,7 +143,7 @@ python main.py
 
 1. Bot connects to SRS and listens on all configured frequencies simultaneously
 2. Pilot transmits on any ATC frequency
-3. Audio is decoded and transcribed by Whisper STT
+3. Audio is decoded and transcribed by faster-whisper STT (distil-large-v3)
 4. Pilot callsign is extracted from the transmission
 5. LLM generates an ATC response using live traffic data (Tacview) and weather (DCS export)
 6. Piper TTS synthesises the response to audio
@@ -210,7 +210,7 @@ Your `.env` file may be overriding `config.lua`. Remove any `ATC_CALLSIGN`, `AIR
 Check `%USERPROFILE%\Saved Games\DCS_Server Instance\Logs\atc_export.log`. If it shows `socket=false`, the DCS Lua socket library is not available. Ensure DCS is not in a restricted export mode.
 
 **STT not transcribing**
-Whisper downloads the model on first run — this may take a minute. Check `bot.log` for errors.
+faster-whisper downloads the `distil-large-v3` model from HuggingFace on first run — this may take a few minutes. Check `bot.log` for errors.
 
 **Piper not found**
 Verify `piper/piper.exe` exists in the project root and the voice model is in `piper/voices/`.
@@ -234,7 +234,7 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 | `components/atc_state.py` | Tracks aircraft strips, squawks, runway state |
 | `components/tacview_client.py` | Reads live traffic from Tacview |
 | `components/srs_client.py` | SRS radio audio send/receive |
-| `components/stt_engine.py` | Whisper speech-to-text |
+| `components/stt_engine.py` | faster-whisper speech-to-text |
 | `components/tts_engine.py` | Piper text-to-speech |
 | `components/dcs_export.py` | Receives weather data from DCS |
 | `components/airfield_db.py` | ICAO coordinate lookup table |
