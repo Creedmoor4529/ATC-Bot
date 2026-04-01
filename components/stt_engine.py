@@ -36,6 +36,7 @@ def _transcribe_sync(pcm_bytes: bytes) -> str:
     segments, _info = model.transcribe(
         audio_np,
         language="en",
+        beam_size=1,
         condition_on_previous_text=False,
     )
     text = " ".join(seg.text.strip() for seg in segments).strip()

@@ -43,7 +43,17 @@ echo "[OK] System dependencies ready."
 # --- Install Python deps ---------------------------------------------------
 echo
 echo "[2/4] Installing Python dependencies..."
-pip3 install -r requirements.txt
+if ! command -v pip3 &>/dev/null; then
+    echo "pip3 not found — creating virtual environment..."
+    sudo apt-get install -y python3-venv 2>/dev/null || true
+    python3 -m venv .venv
+    source .venv/bin/activate
+    echo "[OK] Virtual environment created at .venv/"
+    echo "     Activate it with: source .venv/bin/activate"
+else
+    python3 -m venv .venv 2>/dev/null && source .venv/bin/activate || true
+fi
+pip install -r requirements.txt
 echo "[OK] Python dependencies installed."
 
 # --- Download Piper --------------------------------------------------------
