@@ -40,21 +40,17 @@ else
 fi
 echo "[OK] System dependencies ready."
 
-# --- Install Python deps ---------------------------------------------------
+# --- Install Python deps (always use a venv) -------------------------------
 echo
 echo "[2/4] Installing Python dependencies..."
-if ! command -v pip3 &>/dev/null; then
-    echo "pip3 not found — creating virtual environment..."
+if command -v apt-get &>/dev/null; then
     sudo apt-get install -y python3-venv 2>/dev/null || true
-    python3 -m venv .venv
-    source .venv/bin/activate
-    echo "[OK] Virtual environment created at .venv/"
-    echo "     Activate it with: source .venv/bin/activate"
-else
-    python3 -m venv .venv 2>/dev/null && source .venv/bin/activate || true
 fi
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
-echo "[OK] Python dependencies installed."
+echo "[OK] Python dependencies installed (virtual environment: .venv/)"
 
 # --- Download Piper --------------------------------------------------------
 echo
@@ -118,6 +114,6 @@ echo "   2. Edit config.lua to set your airfield and frequencies"
 echo "   3. Install dcs_atc_export.lua on the Windows DCS machine:"
 echo "      %USERPROFILE%\Saved Games\DCS\Scripts\Hooks\"
 echo "   4. Set BOT_HOST in dcs_atc_export.lua to this machine's IP"
-echo "   5. Run: python3 main.py"
+echo "   5. Run: source .venv/bin/activate && python3 main.py"
 echo "============================================================"
 echo
