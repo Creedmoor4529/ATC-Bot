@@ -88,6 +88,9 @@ PIPER_VOICE = os.getenv("PIPER_VOICE", "piper/voices/en_US-amy-medium.onnx")
 # Whisper
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "distil-large-v3")
 
+# Logging — set LOG_LEVEL in .env to DEBUG, INFO, WARNING, or ERROR (default: DEBUG)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
+
 # Audio
 AUDIO_SAMPLE_RATE = 16000
 AUDIO_CHANNELS    = 1

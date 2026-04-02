@@ -47,10 +47,21 @@ from config import (
     BOT_LAT, BOT_LON, BOT_ALT,
 )
 
+from config import LOG_LEVEL as _LOG_LEVEL
+
+_log_fmt = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+_log_handlers = [logging.StreamHandler(sys.stdout)]
+try:
+    _log_handlers.append(logging.FileHandler(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot.log"),
+        encoding="utf-8",
+    ))
+except OSError:
+    pass
 logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
+    level=getattr(logging, _LOG_LEVEL, logging.DEBUG),
+    format=_log_fmt,
+    handlers=_log_handlers,
 )
 # Suppress noisy third-party loggers
 for _noisy in ("httpcore", "httpx", "openai._base_client"):

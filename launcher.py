@@ -1,9 +1,11 @@
 """
-ATC Bot launcher — starts main.py silently with output redirected to bot.log.
-Compile to exe with:  pyinstaller --onefile --noconsole --name "ATC Bot" launcher.py
+ATC Bot launcher — starts main.py with output to console and bot.log.
+Closing the console window cleanly kills the bot process.
+Compile with:  pyinstaller --onefile --console --name "ATC Bot" launcher.py
 """
 
 import os
+import signal
 import shutil
 import subprocess
 import sys
@@ -20,7 +22,29 @@ def _find_python() -> str | None:
     return None
 
 
+proc = None
+
+
+def _shutdown(signum=None, frame=None):
+    """Kill the bot subprocess and exit."""
+    if proc and proc.poll() is None:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+    sys.exit(0)
+
+
 def main():
+    global proc
+
+    # Handle Ctrl+C and console close events
+    signal.signal(signal.SIGINT, _shutdown)
+    signal.signal(signal.SIGTERM, _shutdown)
+    if sys.platform == "win32":
+        signal.signal(signal.SIGBREAK, _shutdown)
+
     here = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
     script   = os.path.join(here, "main.py")
     log_path = os.path.join(here, "bot.log")
@@ -33,16 +57,26 @@ def main():
         log.write(f"{'='*60}\n")
 
         if not python:
-            log.write("ERROR: Python interpreter not found in PATH.\n")
+            msg = "ERROR: Python interpreter not found in PATH.\n"
+            log.write(msg)
+            print(msg)
             return
 
         log.write(f"Python: {python}\n")
         log.write(f"Script: {script}\n\n")
         log.flush()
 
-        kwargs = {"cwd": here}
-        proc = subprocess.Popen([python, script], **kwargs)
-        proc.wait()
+        print(f"ATC Bot running — output in bot.log")
+        print(f"Press Ctrl+C or close this window to stop.\n")
+
+        kwargs = {"cwd": here, "stdout": log, "stderr": subprocess.STDOUT}
+        proc = subprocess.Popen([python, "-u", script], **kwargs)
+
+        try:
+            proc.wait()
+        except KeyboardInterrupt:
+            _shutdown()
+
         log.write(f"\nBot exited with code {proc.returncode} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
 

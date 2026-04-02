@@ -138,6 +138,22 @@ All operational settings are in `config.lua`. The file is self-documented with a
 | `FREQ_GROUND` | Ground frequency in Hz |
 | `INSTRUCTIONS` | Optional custom ATC instructions appended to the system prompt |
 
+### Logging
+
+Set `LOG_LEVEL` in your `.env` to control output verbosity:
+
+| Level | Description |
+|-------|-------------|
+| `DEBUG` | All messages including SRS pings, Tacview updates, audio details (default) |
+| `INFO` | Transmissions, ATC responses, model loading — recommended for normal use |
+| `WARNING` | Only warnings and errors |
+| `ERROR` | Only errors |
+
+Example `.env` setting to disable debug noise:
+```
+LOG_LEVEL=INFO
+```
+
 ### AI Providers
 
 | Provider | Cost | Setup |
@@ -183,13 +199,23 @@ INSTRUCTIONS = "Expect fast jet traffic. All aircraft report 10 nautical miles. 
 **Option A — Executable (recommended)**
 
 Run `build_launcher.bat` once to compile the launcher, then double-click `ATC Bot.exe`.
-The bot runs silently in the background. All output is written to `bot.log`.
+A console window will open showing the bot status. Press `Ctrl+C` or close the window to stop the bot.
+All output is also written to `bot.log`.
 
 **Option B — Command line**
 
+Windows:
 ```
 python main.py
 ```
+
+Linux:
+```
+source .venv/bin/activate
+python3 main.py
+```
+
+Output is logged to both the terminal and `bot.log` on all platforms.
 
 ---
 
@@ -322,7 +348,7 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 | `components/tts_engine.py` | Piper text-to-speech |
 | `components/dcs_export.py` | Receives weather data from DCS |
 | `components/airfield_db.py` | ICAO coordinate lookup table |
-| `bot.log` | Runtime log — written when using the launcher exe |
+| `bot.log` | Runtime log — always written on all platforms |
 
 ---
 
