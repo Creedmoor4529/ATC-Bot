@@ -6,8 +6,8 @@ An AI-powered air traffic controller for DCS World. The bot listens on SRS radio
 
 ## Requirements
 
-- Windows 10/11
-- [DCS World](https://www.digitalcombatsimulator.com/)
+- Windows 10/11, Linux (tested on Ubuntu 24.04 LTS), or macOS (untested — may require manual setup)
+- [DCS World](https://www.digitalcombatsimulator.com/) — requires Windows. The bot can run on a separate Linux or macOS machine, connecting to the DCS/SRS server over the network.
 - [SRS (SimpleRadio Standalone)](http://dcssimpleradio.com/) — server must be running
 - [Tacview](https://www.tacview.net/) — with real-time telemetry enabled
 - Python 3.11+
