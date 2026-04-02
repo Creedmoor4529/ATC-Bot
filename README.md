@@ -2,6 +2,8 @@
 
 An AI-powered air traffic controller for DCS World Server. The bot listens on SRS radio frequencies, transcribes pilot transmissions using faster-whisper STT, generates realistic ATC responses using an LLM, and broadcasts them back over SRS using Piper TTS.
 
+> **Note:** This project is in early development. Expect frequent updates as bugs are fixed and the AI is trained to produce more accurate ATC responses.
+
 ---
 
 ## Requirements
