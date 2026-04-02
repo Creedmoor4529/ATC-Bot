@@ -168,9 +168,11 @@ class ATCState:
                     strip.update_from_tacview(ac)
                     break
 
-            # Check runway occupancy using live position data
+            # Check runway occupancy — ignore stationary aircraft not in our strips
             if _on_runway(ac.lat, ac.lon, ac.alt_ft, AIRPORT_ELEVATION_FT, self.airport_icao):
-                on_rwy.append(label)
+                is_known = any(cs in label or label in cs for cs in self.strips)
+                if is_known or ac.speed_kts > 5:
+                    on_rwy.append(label)
 
         # Update runway state: first occupant is landing, second is lined up
         self.active_runway.landing_callsign  = on_rwy[0] if len(on_rwy) > 0 else ""
