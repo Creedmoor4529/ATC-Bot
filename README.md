@@ -30,10 +30,44 @@ chmod +x install.sh && ./install.sh
 ```
 
 The install script will:
+- Create a Python virtual environment (`.venv/`)
 - Install Python dependencies
 - Download and extract Piper TTS
 - Download the `en_US-amy-medium` voice model
 - Create `.env` from `.env.example`
+
+#### NVIDIA GPU support (optional but recommended)
+
+If you have an NVIDIA GPU, install CUDA dependencies for GPU-accelerated speech recognition. Without these, faster-whisper falls back to CPU which is significantly slower.
+
+**Option A — Python packages (quickest, works on any distro):**
+```
+source .venv/bin/activate
+pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
+```
+
+**Option B — System CUDA toolkit:**
+
+Ubuntu / Debian:
+```
+sudo apt install nvidia-cuda-toolkit
+```
+
+Fedora / RHEL:
+```
+sudo dnf install cuda-toolkit
+```
+
+Arch Linux:
+```
+sudo pacman -S cuda
+```
+
+#### Running the bot on Linux
+```
+source .venv/bin/activate
+python3 main.py
+```
 
 > **Linux note:** DCS World is Windows-only. The bot can run on Linux and connect to an SRS server running on a Windows machine over the network. Set `BOT_HOST` in `dcs_atc_export.lua` to the Linux machine's IP address.
 
