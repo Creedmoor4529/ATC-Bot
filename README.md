@@ -7,7 +7,7 @@ An AI-powered air traffic controller for DCS World Server. The bot listens on SR
 ## Requirements
 
 - Windows 10/11, Linux (tested on Ubuntu 24.04 LTS), or macOS (untested — may require manual setup)
-- [DCS World Server](https://www.digitalcombatsimulator.com/) — a dedicated server instance is required (the bot reads telemetry and weather exports from the running server). Requires Windows. The bot itself can run on a separate Linux or macOS machine, connecting to the DCS server over the network.
+- [DCS World Server](https://www.digitalcombatsimulator.com/) — a dedicated server instance is required (the bot reads telemetry and weather exports from the running server). Runs on Windows natively or [on Linux via Wine](https://wiki.hoggitworld.com/view/DCS_on_linux). The bot itself can run on a separate machine, connecting to the DCS server over the network.
 - [SRS (SimpleRadio Standalone)](http://dcssimpleradio.com/) — server must be running
 - [Tacview](https://www.tacview.net/) — with real-time telemetry enabled
 - Python 3.11+
