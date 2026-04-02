@@ -6,6 +6,7 @@ Runs transcription in a thread pool so it doesn't block the async event loop.
 """
 
 import asyncio
+import ctypes
 import logging
 import numpy as np
 from faster_whisper import WhisperModel
@@ -17,17 +18,31 @@ logger = logging.getLogger(__name__)
 _model = None
 
 
+def _cuda_available() -> bool:
+    """Check if CUDA runtime is actually usable."""
+    try:
+        ctypes.cdll.LoadLibrary("libcublas.so.12")
+        return True
+    except OSError:
+        pass
+    try:
+        ctypes.cdll.LoadLibrary("cublas64_12.dll")
+        return True
+    except OSError:
+        pass
+    return False
+
+
 def _load_model():
     global _model
     if _model is None:
-        logger.info(f"Loading faster-whisper model: {WHISPER_MODEL}")
-        try:
-            _model = WhisperModel(WHISPER_MODEL, device="cuda", compute_type="auto")
-            logger.info("faster-whisper model loaded (CUDA).")
-        except Exception:
-            logger.info("CUDA not available, falling back to CPU.")
-            _model = WhisperModel(WHISPER_MODEL, device="cpu", compute_type="int8")
-            logger.info("faster-whisper model loaded (CPU, int8).")
+        if _cuda_available():
+            device, compute = "cuda", "auto"
+        else:
+            device, compute = "cpu", "int8"
+        logger.info(f"Loading faster-whisper model: {WHISPER_MODEL} (device={device}, compute={compute})")
+        _model = WhisperModel(WHISPER_MODEL, device=device, compute_type=compute)
+        logger.info("faster-whisper model loaded.")
     return _model
 
 
