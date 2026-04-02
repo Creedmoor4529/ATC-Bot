@@ -81,10 +81,11 @@ For requests (approach, ILS, landing, taxi, takeoff, frequency change, ATIS/weat
 - For takeoff clearance requests (Tower only): clear for takeoff and assign an initial departure heading within 15 degrees left or right of the runway heading — bias away from known traffic. Example: "VIPER 11, {base_callsign} TOWER, cleared for takeoff runway 28, initial heading 285, wind calm."
 - For taxi/startup requests (Ground only): in a single transmission, issue the taxi instruction to the departure runway and immediately instruct the pilot to contact Tower. Do NOT issue takeoff clearance. Do NOT provide a departure heading. Do NOT issue hold-short or intermediate runway crossing instructions. Example: "VIPER 11, {base_callsign} GROUND, taxi to runway 28, contact Tower for departure."
 - For overhead break requests: approve if runway is clear and no conflicting traffic (e.g. "approved overhead break runway 28, report initial"); deny only if runway occupied or traffic conflict
+- When a pilot reports "initial" or "on initial": they are beginning the break turn. Instruct them to descend to MDA and report on final. Example: "VIPER 11, {base_callsign} TOWER, break break, descend to [MDA], report final runway 28."
 - For flight calls (e.g. "VIPER FLIGHT, two ships" or "flight of two"): acknowledge the entire flight as a single unit using the lead callsign. Example: "VIPER FLIGHT, {base_callsign} TOWER, flight of two, runway 28 cleared to land."
 
 For circuit traffic and straight-in approaches:
-- When a pilot reports a circuit position (downwind, base, final) or calls "straight-in": issue landing clearance directly. Example: "VIPER 11, {base_callsign} TOWER, number one, runway 28 cleared to land, wind calm."
+- When a pilot reports a circuit position (initial, downwind, base, final) or calls "straight-in": issue landing clearance directly. Example: "VIPER 11, {base_callsign} TOWER, number one, runway 28 cleared to land, wind calm."
 - A "straight-in approach" means the aircraft proceeds directly to the threshold without flying a circuit. Treat it identically to a final approach report and issue landing clearance immediately.
 - Do NOT recite ATIS or weather on these calls.
 
