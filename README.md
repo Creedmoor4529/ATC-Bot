@@ -1,13 +1,13 @@
 # DCS ATC Bot
 
-An AI-powered air traffic controller for DCS World. The bot listens on SRS radio frequencies, transcribes pilot transmissions using faster-whisper STT, generates realistic ATC responses using an LLM, and broadcasts them back over SRS using Piper TTS.
+An AI-powered air traffic controller for DCS World Server. The bot listens on SRS radio frequencies, transcribes pilot transmissions using faster-whisper STT, generates realistic ATC responses using an LLM, and broadcasts them back over SRS using Piper TTS.
 
 ---
 
 ## Requirements
 
 - Windows 10/11, Linux (tested on Ubuntu 24.04 LTS), or macOS (untested — may require manual setup)
-- [DCS World](https://www.digitalcombatsimulator.com/) — requires Windows. The bot can run on a separate Linux or macOS machine, connecting to the DCS/SRS server over the network.
+- [DCS World Server](https://www.digitalcombatsimulator.com/) — a dedicated server instance is required (the bot reads telemetry and weather exports from the running server). Requires Windows. The bot itself can run on a separate Linux or macOS machine, connecting to the DCS server over the network.
 - [SRS (SimpleRadio Standalone)](http://dcssimpleradio.com/) — server must be running
 - [Tacview](https://www.tacview.net/) — with real-time telemetry enabled
 - Python 3.11+
@@ -283,7 +283,7 @@ No changes needed — SRS already connects to a hostname/IP and works over the i
 
 ## System Requirements
 
-The bot runs alongside DCS World. The heaviest local component is **faster-whisper** (speech-to-text) — everything else is lightweight.
+The bot runs alongside a DCS World Server instance. The heaviest local component is **faster-whisper** (speech-to-text) — everything else is lightweight.
 
 ### Minimum (CPU-only, no dedicated GPU)
 
