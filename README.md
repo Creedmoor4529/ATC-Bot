@@ -326,6 +326,28 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 
 ---
 
+## Acknowledgements
+
+This project is built on the following open-source projects and services:
+
+| Project | Role | License / Link |
+|---------|------|----------------|
+| [DCS World](https://www.digitalcombatsimulator.com/) | Combat flight simulator | Eagle Dynamics |
+| [SRS (SimpleRadio Standalone)](http://dcssimpleradio.com/) | In-game radio communications | Ciribob |
+| [Tacview](https://www.tacview.net/) | Real-time flight telemetry | Vyrtuoz |
+| [faster-whisper](https://github.com/SYSTRAN/faster-whisper) | Speech-to-text (CTranslate2 Whisper) | MIT |
+| [OpenAI Whisper](https://github.com/openai/whisper) | Original Whisper model architecture | MIT |
+| [Piper TTS](https://github.com/rhasspy/piper) | Text-to-speech engine | MIT |
+| [OpenAI API](https://platform.openai.com/) | LLM provider (GPT-4o-mini) | OpenAI |
+| [Groq](https://console.groq.com/) | LLM provider (free tier) | Groq |
+| [Ollama](https://ollama.com/) | Local LLM inference | MIT |
+| [NumPy](https://numpy.org/) | Audio array processing | BSD |
+| [SciPy](https://scipy.org/) | Audio signal processing | BSD |
+| [opuslib](https://github.com/OnBeep/opuslib) | Opus audio codec bindings | BSD |
+| [python-dotenv](https://github.com/theskumar/python-dotenv) | Environment variable management | BSD |
+| [CTranslate2](https://github.com/OpenNMT/CTranslate2) | Optimised transformer inference | MIT |
+| [HuggingFace](https://huggingface.co/) | Model hosting and distribution | HuggingFace |
+
 ## Development
 
-This project was developed with [Claude.ai](https://claude.ai) (Anthropic).
+This project was developed with [Claude Code](https://claude.ai/code) (Anthropic).
