@@ -85,6 +85,22 @@ ATC_FREQUENCIES = [
     SRSRadio(frequency=FREQ_GROUND_2,   modulation=MODULATION_AM, name="Ground 2",   callsign=f"{_BASE} GROUND"),
 ]
 
+# ATC digit-by-digit frequency readout for TTS
+_DIGIT_WORDS = {
+    "0": "zero", "1": "one", "2": "two", "3": "three", "4": "four",
+    "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "niner",
+}
+
+def _freq_to_spoken(freq_hz: float) -> str:
+    """Convert a frequency in Hz to ATC spoken format.
+    E.g. 119500000 → 'one-one-niner point five zero zero'
+    """
+    mhz = f"{freq_hz / 1e6:.3f}"
+    whole, decimal = mhz.split(".")
+    spoken_whole = "-".join(_DIGIT_WORDS[d] for d in whole)
+    spoken_decimal = "-".join(_DIGIT_WORDS[d] for d in decimal)
+    return f"{spoken_whole} point {spoken_decimal}"
+
 
 class AudioAccumulator:
     """
@@ -146,6 +162,8 @@ class ATCBot:
         # altitude-hold queue: aircraft told to maintain altitude awaiting runway clearance
         # each entry: {callsign, radio_index, sequence}
         self._altitude_hold_queue: list[dict] = []
+        # Track which conflicts we've already warned about to avoid repeats
+        self._warned_conflicts: set[str] = set()
 
         srs_client_obj = SRSClient(
             name=_BASE,
@@ -197,6 +215,10 @@ class ATCBot:
         asyncio.create_task(self._dcs_heartbeat_monitor_loop())
         # Altitude-hold release monitor
         asyncio.create_task(self._altitude_hold_monitor_loop())
+        # Approach conflict monitor
+        asyncio.create_task(self._approach_conflict_monitor_loop())
+        # Arrival sequence monitor — clears next aircraft when #1 lands
+        asyncio.create_task(self._arrival_sequence_monitor_loop())
 
     async def stop(self):
         logger.info("Shutting down...")
@@ -213,6 +235,16 @@ class ATCBot:
                 try:
                     self.state.sync_tacview(self.tacview.get_all_aircraft())
                     self.state.sync_aerodromes(self.tacview.get_blue_aerodromes())
+                    # Clean up bot queues for any purged strips
+                    active_callsigns = set(self.state.strips.keys())
+                    self._altitude_hold_queue = [
+                        e for e in self._altitude_hold_queue
+                        if e["callsign"] in active_callsigns
+                    ]
+                    self._warned_conflicts = {
+                        k for k in self._warned_conflicts
+                        if k.split(":")[0] in active_callsigns
+                    }
                 except Exception as e:
                     logger.debug(f"Tacview sync error: {e}")
                 delay = 5
@@ -360,6 +392,18 @@ class ATCBot:
         radio_index = self._frequency_to_radio_index(frequency)
         atc_callsign = ATC_FREQUENCIES[radio_index].callsign or ATC_CALLSIGN
 
+        # 3a. Frequency mismatch detection — if the pilot calls the wrong service
+        # (e.g. calls "Tower" on the Approach frequency), instruct them to switch.
+        wrong_freq_reply = await self._check_frequency_mismatch(
+            text, radio_index, pilot_callsign, atc_callsign
+        )
+        if wrong_freq_reply:
+            logger.info(f"Frequency mismatch response: {wrong_freq_reply!r}")
+            pcm_reply = await synthesize(wrong_freq_reply)
+            if pcm_reply:
+                await self.srs.transmit(pcm_reply, radio_index=radio_index)
+            return
+
         # 4. Update ATC state
         if pilot_callsign:
             self.state.update_strip_contact(pilot_callsign)
@@ -504,6 +548,282 @@ class ATCBot:
             "radio_index":    radio_index,
             "expires":        _time.monotonic() + READBACK_WINDOW,
         }
+
+    async def _approach_conflict_monitor_loop(self):
+        """
+        Background loop: every 3 seconds, check for conflicts between the #1
+        in the landing pattern and unannounced aircraft (detected via radar).
+
+        Issues a proactive traffic warning on Tower frequency when:
+          - An unannounced aircraft is on/entering the runway
+          - An unannounced aircraft's estimated time-to-touchdown is within
+            30 seconds of the #1's (based on distance and approach speed)
+
+        When all conflicts clear after a warning was issued, proactively
+        issues landing clearance to the #1 in pattern.
+        """
+        while True:
+            await asyncio.sleep(3)
+            try:
+                conflicts = self.state.check_approach_conflicts()
+                if not conflicts:
+                    if self._warned_conflicts:
+                        # Conflicts just cleared — issue landing clearance to #1
+                        # Grab the pilot callsign from any previous warning key
+                        n1_callsign = next(iter(self._warned_conflicts)).split(":")[0]
+                        self._warned_conflicts.clear()
+                        await self._clear_after_conflict(n1_callsign)
+                    continue
+
+                for conflict in conflicts:
+                    # Build a unique key so we warn once per conflict pair
+                    conflict_key = f"{conflict['number1_callsign']}:{conflict['threat_callsign']}"
+                    if conflict_key in self._warned_conflicts:
+                        continue
+                    self._warned_conflicts.add(conflict_key)
+
+                    await self._issue_traffic_warning(conflict)
+            except Exception as e:
+                logger.debug(f"Approach conflict monitor error: {e}")
+
+    async def _issue_traffic_warning(self, conflict: dict):
+        """Issue a proactive traffic warning to the #1 in pattern."""
+        pilot_callsign = conflict["number1_callsign"]
+        threat = conflict["threat_callsign"]
+        # Use Tower frequency for landing traffic warnings
+        radio_index = next(
+            (i for i, r in enumerate(ATC_FREQUENCIES) if r.name == "Tower"),
+            2,  # fallback to index 2 (Tower primary)
+        )
+        atc_callsign = ATC_FREQUENCIES[radio_index].callsign or ATC_CALLSIGN
+
+        ac_type = ""
+        if pilot_callsign in self.state.strips:
+            ac_type = self.state.strips[pilot_callsign].aircraft_type
+        atc_snapshot = self.state.context_snapshot(
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, requesting_aircraft_type=ac_type
+        )
+        traffic = self.tacview.traffic_summary(
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0
+        )
+
+        if conflict["type"] == "runway_incursion":
+            instruction = (
+                f"URGENT: An unannounced aircraft ({threat}) is on the runway. "
+                f"{pilot_callsign} is on approach. Issue an immediate traffic warning "
+                f"and instruct {pilot_callsign} to go around if within 2nm, "
+                f"or caution and hold position if further out."
+            )
+        else:
+            instruction = (
+                f"TRAFFIC WARNING: An unannounced aircraft ({threat}) is on approach "
+                f"at {conflict['threat_dist_nm']}nm, {conflict['threat_alt_ft']}ft, "
+                f"{conflict['threat_speed_kts']}kts, runway {conflict['threat_runway']}. "
+                f"This aircraft has NOT made radio contact. "
+                f"{pilot_callsign} is also on approach — estimated time-to-touchdown "
+                f"for {pilot_callsign}: {conflict['time_to_touchdown_n1']}s, "
+                f"threat: {conflict['time_to_touchdown_threat']}s. "
+                f"Issue a traffic advisory to {pilot_callsign} with the threat's "
+                f"position and instruct accordingly — caution wake turbulence if "
+                f"the threat is ahead, or extend/break off if conflict is imminent."
+            )
+
+        logger.info(f"Approach conflict: {conflict['type']} — {pilot_callsign} vs {threat}")
+        warning = await self.brain.proactive_clearance(
+            clearance_instruction=instruction,
+            atc_state_snapshot=atc_snapshot,
+            traffic_summary=traffic,
+            pilot_callsign=pilot_callsign,
+            atc_callsign=atc_callsign,
+        )
+        if not warning:
+            return
+        logger.info(f"Traffic warning → {pilot_callsign}: {warning!r}")
+        pcm = await synthesize(warning)
+        if not pcm:
+            return
+        await self.srs.transmit(pcm, radio_index=radio_index)
+
+    async def _clear_after_conflict(self, pilot_callsign: str):
+        """
+        After a traffic conflict clears, issue landing clearance to #1 if
+        they are still on approach.
+        """
+        # Verify the aircraft is still on approach (still in strips and geometrically valid)
+        number1 = self.state.find_number_one()
+        if not number1 or number1.callsign != pilot_callsign:
+            return
+
+        radio_index = next(
+            (i for i, r in enumerate(ATC_FREQUENCIES) if r.name == "Tower"),
+            2,
+        )
+        atc_callsign = ATC_FREQUENCIES[radio_index].callsign or ATC_CALLSIGN
+
+        ac_type = ""
+        if pilot_callsign in self.state.strips:
+            ac_type = self.state.strips[pilot_callsign].aircraft_type
+        atc_snapshot = self.state.context_snapshot(
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, requesting_aircraft_type=ac_type
+        )
+        traffic = self.tacview.traffic_summary(
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0
+        )
+
+        instruction = (
+            f"The previously reported traffic conflict has cleared. "
+            f"The runway is now clear. Issue landing clearance to {pilot_callsign} "
+            f"on the active runway. Use standard phraseology: 'traffic clear, "
+            f"runway [number] cleared to land.'"
+        )
+        logger.info(f"Conflict cleared — issuing landing clearance to {pilot_callsign}")
+        clearance = await self.brain.proactive_clearance(
+            clearance_instruction=instruction,
+            atc_state_snapshot=atc_snapshot,
+            traffic_summary=traffic,
+            pilot_callsign=pilot_callsign,
+            atc_callsign=atc_callsign,
+        )
+        if not clearance:
+            return
+        logger.info(f"Post-conflict clearance → {pilot_callsign}: {clearance!r}")
+        pcm = await synthesize(clearance)
+        if not pcm:
+            return
+        await self.srs.transmit(pcm, radio_index=radio_index)
+
+    async def _arrival_sequence_monitor_loop(self):
+        """
+        Background loop: every 3 seconds, check if #1 in the arrival sequence
+        has landed and vacated the runway. When that happens, issue landing
+        clearance to the new #1 (previously #2).
+
+        Only clears aircraft that have radio contact (in our strips).
+        Unannounced aircraft are tracked for sequencing but not called.
+        """
+        _last_cleared: str = ""  # prevent duplicate clearances
+        while True:
+            await asyncio.sleep(3)
+            try:
+                new_n1 = self.state.number_one_landed()
+                if not new_n1:
+                    continue
+                if new_n1 == _last_cleared:
+                    continue
+
+                # Only issue clearance to aircraft that have made radio contact
+                if new_n1 not in self.state.strips:
+                    # Check partial match
+                    matched = None
+                    for cs in self.state.strips:
+                        if cs in new_n1 or new_n1 in cs:
+                            matched = cs
+                            break
+                    if not matched:
+                        continue
+                    new_n1 = matched
+
+                _last_cleared = new_n1
+                await self._clear_next_in_sequence(new_n1)
+            except Exception as e:
+                logger.debug(f"Arrival sequence monitor error: {e}")
+
+    async def _clear_next_in_sequence(self, pilot_callsign: str):
+        """Issue landing clearance to the next aircraft in the arrival sequence."""
+        radio_index = next(
+            (i for i, r in enumerate(ATC_FREQUENCIES) if r.name == "Tower"),
+            2,
+        )
+        atc_callsign = ATC_FREQUENCIES[radio_index].callsign or ATC_CALLSIGN
+
+        ac_type = ""
+        if pilot_callsign in self.state.strips:
+            ac_type = self.state.strips[pilot_callsign].aircraft_type
+        atc_snapshot = self.state.context_snapshot(
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, requesting_aircraft_type=ac_type
+        )
+        traffic = self.tacview.traffic_summary(
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0
+        )
+
+        # Determine sequence number from arrival_sequence
+        seq = 1
+        if pilot_callsign in self.state.arrival_sequence:
+            seq = self.state.arrival_sequence.index(pilot_callsign) + 1
+
+        instruction = (
+            f"The preceding aircraft has landed and cleared the runway. "
+            f"{pilot_callsign} is now number {seq} in the arrival sequence. "
+            f"Issue landing clearance to {pilot_callsign} on the active runway."
+        )
+        logger.info(f"Arrival sequence: {pilot_callsign} promoted to #{seq}, issuing clearance")
+        clearance = await self.brain.proactive_clearance(
+            clearance_instruction=instruction,
+            atc_state_snapshot=atc_snapshot,
+            traffic_summary=traffic,
+            pilot_callsign=pilot_callsign,
+            atc_callsign=atc_callsign,
+        )
+        if not clearance:
+            return
+        logger.info(f"Sequence clearance → {pilot_callsign}: {clearance!r}")
+        pcm = await synthesize(clearance)
+        if not pcm:
+            return
+        await self.srs.transmit(pcm, radio_index=radio_index)
+
+    async def _check_frequency_mismatch(
+        self, text: str, radio_index: int, pilot_callsign: str | None, atc_callsign: str
+    ) -> str | None:
+        """
+        Detect when a pilot calls the wrong service for the frequency they're on.
+        E.g. calling "Tower" on the Approach frequency → instruct to switch.
+        Returns a response string if mismatched, or None if correct/ambiguous.
+        """
+        # Map service keywords to the canonical service name
+        _SERVICE_MAP = {
+            "APPROACH": "Approach",
+            "TOWER":    "Tower",
+            "GROUND":   "Ground",
+        }
+
+        # What service does this frequency belong to?
+        current_radio = ATC_FREQUENCIES[radio_index]
+        # The radio name is like "Approach", "Approach 2", "Tower", "Tower 2", etc.
+        current_service = current_radio.name.split()[0]  # "Approach", "Tower", or "Ground"
+
+        # Scan the pilot's text for which service they're calling
+        words_upper = text.upper().split()
+        called_service = None
+        for w in words_upper:
+            w_clean = w.rstrip(".,!?")
+            if w_clean in _SERVICE_MAP:
+                called_service = _SERVICE_MAP[w_clean]
+                break
+
+        if not called_service or called_service == current_service:
+            return None  # correct frequency or no service word detected
+
+        # Find VHF (primary) and UHF (secondary) frequencies for the called service
+        vhf_freq = None
+        uhf_freq = None
+        for radio in ATC_FREQUENCIES:
+            if radio.name.split()[0] == called_service and radio.frequency > 0:
+                # Primary (no "2" suffix) is VHF, secondary ("2" suffix) is UHF
+                if "2" in radio.name:
+                    uhf_freq = radio.frequency
+                else:
+                    vhf_freq = radio.frequency
+
+        if not vhf_freq:
+            return None
+
+        freq_str = _freq_to_spoken(vhf_freq)
+        if uhf_freq:
+            freq_str += f" or {_freq_to_spoken(uhf_freq)}"
+
+        cs = pilot_callsign or "Station"
+        return f"{cs}, {atc_callsign}, you are on {current_service} frequency, contact {called_service} on {freq_str}."
 
     def _frequency_to_radio_index(self, frequency: float) -> int:
         """Find the radio index closest to the given frequency."""

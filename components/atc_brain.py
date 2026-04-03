@@ -22,9 +22,32 @@ from config import (
     AI_PROVIDER, AI_MODEL, OLLAMA_HOST,
     OPENAI_API_KEY, GROQ_API_KEY,
     AIRPORT_ICAO, ATC_CALLSIGN, INSTRUCTIONS,
+    FREQ_APPROACH, FREQ_APPROACH_2,
+    FREQ_TOWER, FREQ_TOWER_2,
+    FREQ_GROUND, FREQ_GROUND_2,
 )
 
 logger = logging.getLogger(__name__)
+
+_DIGIT_WORDS = {
+    "0": "zero", "1": "one", "2": "two", "3": "three", "4": "four",
+    "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "niner",
+}
+
+def _freq_to_spoken(freq_hz: float) -> str:
+    """Convert frequency in Hz to ATC spoken format: 'one-one-niner point five zero zero'."""
+    mhz = f"{freq_hz / 1e6:.3f}"
+    whole, decimal = mhz.split(".")
+    spoken_whole = "-".join(_DIGIT_WORDS[d] for d in whole)
+    spoken_decimal = "-".join(_DIGIT_WORDS[d] for d in decimal)
+    return f"{spoken_whole} point {spoken_decimal}"
+
+def _freq_pair_spoken(vhf_hz: float, uhf_hz: float) -> str:
+    """Format a VHF/UHF frequency pair as spoken text, omitting UHF if disabled (0)."""
+    s = _freq_to_spoken(vhf_hz)
+    if uhf_hz:
+        s += f" or {_freq_to_spoken(uhf_hz)}"
+    return s
 
 _PROVIDER_CONFIGS = {
     "openai": {
@@ -78,6 +101,10 @@ For requests (approach, ILS, landing, taxi, takeoff, frequency change, ATIS/weat
 - For approach requests: issue the approach clearance with runway and any relevant traffic. Include QNH only if the pilot asked for weather.
 - When a pilot reports inbound for a runway (on Approach frequency): request fuel state update and instruct to switch to Tower. Example: "VIPER 11, {base_callsign} APPROACH, update state, switch Tower."
 
+- IMPORTANT — service boundaries: each controller only handles their own responsibilities. If a pilot requests a service that belongs to a different controller, do NOT provide that service — instead instruct them to contact the correct frequency. When stating a frequency, read each digit individually with "point" before the decimal portion (e.g. "one-one-niner point five zero zero"). Include both VHF and UHF frequencies when available. Specifically:
+  - Taxi and startup requests belong to Ground. If you are Tower or Approach and a pilot requests taxi or startup, tell them to contact Ground on {freq_ground}. Example: "VIPER 11, {base_callsign} TOWER, contact Ground on {freq_ground} for taxi."
+  - Takeoff clearance belongs to Tower. If you are Ground and a pilot requests takeoff, tell them to contact Tower on {freq_tower}. Example: "VIPER 11, {base_callsign} GROUND, taxi to runway 28, contact Tower on {freq_tower} for departure."
+  - Approach clearances and vectors belong to Approach. If you are Tower or Ground and a pilot requests an approach or vectors, tell them to contact Approach on {freq_approach}.
 - For takeoff clearance requests (Tower only): clear for takeoff and assign an initial departure heading within 15 degrees left or right of the runway heading — bias away from known traffic. Example: "VIPER 11, {base_callsign} TOWER, cleared for takeoff runway 28, initial heading 285, wind calm."
 - For taxi/startup requests (Ground only): in a single transmission, issue the taxi instruction to the departure runway and immediately instruct the pilot to contact Tower. Do NOT issue takeoff clearance. Do NOT provide a departure heading. Do NOT issue hold-short or intermediate runway crossing instructions. Example: "VIPER 11, {base_callsign} GROUND, taxi to runway 28, contact Tower for departure."
 - For overhead break requests: approve if runway is clear and no conflicting traffic (e.g. "approved overhead break runway 28, report initial"); deny only if runway occupied or traffic conflict
@@ -93,6 +120,10 @@ For landing sequence and traffic advisories:
 - When multiple aircraft are inbound, assign sequence numbers in order of call-in. State the number in the clearance: "number one", "number two", etc.
 - When traffic is present on approach or in the pattern, describe it to the inbound aircraft using TRAFFIC data — state the clock position relative to the requesting aircraft, distance in miles, and altitude. Example: "VIPER 11, {base_callsign} TOWER, number two, traffic your 11 o'clock, 4 miles, angels two, runway 28 cleared to land."
 - If you have instructed an aircraft to maintain altitude pending conflicting traffic: when the runway is clear and sequence permits, issue descent and landing clearance to that aircraft without waiting for them to call again.
+- DETECTED APPROACHES in ATC STATE are aircraft detected on approach by radar but with NO radio contact. These are typically DCS AI aircraft that will never call in. Treat them as real traffic:
+  - Include them in traffic advisories to other pilots (position, altitude, distance).
+  - Factor them into landing sequence — if a detected approach aircraft is closer to the runway than the pilot calling in, warn the pilot about the traffic.
+  - If a detected approach shows a runway different from the active runway, be aware of potential conflicting traffic.
 
 For post-departure reports:
 - When a pilot reports airborne or climbing to an altitude: respond with radar contact and continue climb instruction. Example: "VIPER 11, Akrotiri DEPARTURE, radar contact, continue climb to angels two."
@@ -143,6 +174,9 @@ class ATCBrain:
         self._system_prompt = SYSTEM_PROMPT.format(
             airport_icao=AIRPORT_ICAO,
             base_callsign=_base,
+            freq_approach=_freq_pair_spoken(FREQ_APPROACH, FREQ_APPROACH_2),
+            freq_tower=_freq_pair_spoken(FREQ_TOWER, FREQ_TOWER_2),
+            freq_ground=_freq_pair_spoken(FREQ_GROUND, FREQ_GROUND_2),
         )
         if INSTRUCTIONS:
             logger.info("Custom instructions loaded from config.lua")
