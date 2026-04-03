@@ -234,6 +234,26 @@ Output is logged to both the terminal and `bot.log` on all platforms.
 
 ---
 
+## Callsign Tips
+
+The bot uses speech-to-text to identify your callsign from each transmission. Clear, NATO-style callsigns work best.
+
+**Recommended format:** `Callsign Number` separated by a pipe `|` from your pilot name in the SRS client.
+
+```
+Whiskey 1-1 | Bob
+Viper 11 | Maverick
+Chevy 2-1 | Dave
+```
+
+The bot reads the portion **before the pipe** as your radio callsign. Keep it simple:
+- Short phonetic words: Whiskey, Viper, Chevy, Dodge, Hawk, Fury, Rage
+- One or two digit group: 1-1, 11, 2-1, 31
+
+**Avoid** intricate or unusual callsigns — the speech-to-text model may struggle to transcribe them accurately, leading to the bot not recognising you or misreading your callsign.
+
+---
+
 ## Frequencies
 
 Set frequencies in `config.lua` to match your SRS server. Each service has a primary and secondary frequency:
