@@ -11,6 +11,9 @@ venv/
 piper/
 AIRFIELD_NAVAIDS.txt
 
+# Release archives
+*.zip
+
 # Compiled launcher
 *.exe
 
