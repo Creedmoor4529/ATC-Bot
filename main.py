@@ -800,10 +800,13 @@ class ATCBot:
         # The radio name is like "Approach", "Approach 2", "Tower", "Tower 2", etc.
         current_service = current_radio.name.split()[0]  # "Approach", "Tower", or "Ground"
 
-        # Scan the pilot's text for which service they're calling
+        # Scan the first few words for which service the pilot is addressing.
+        # Only check the opening of the transmission (callsign + service name)
+        # to avoid false triggers from mid-sentence mentions like "switching Tower"
+        # or readbacks like "state 5000, Tower".
         words_upper = text.upper().split()
         called_service = None
-        for w in words_upper:
+        for w in words_upper[:6]:
             w_clean = w.rstrip(".,!?")
             if w_clean in _SERVICE_MAP:
                 called_service = _SERVICE_MAP[w_clean]
