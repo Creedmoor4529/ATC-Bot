@@ -1,6 +1,7 @@
 --[[
   DCS ATC Bot — weather export hook
-  Place this file in:  %USERPROFILE%\Saved Games\DCS\Scripts\Hooks\
+  Copy this file to:  %USERPROFILE%\Saved Games\DCS\Scripts\Hooks\dcs_atc_export.lua
+  Then edit BOT_HOST and BOT_PORT below.
 
   BOT_HOST: IP address of the machine running the ATC bot.
     - If the bot is running on the SAME machine as DCS, set to "127.0.0.1"
@@ -11,7 +12,7 @@
   BOT_PORT: must match DCS_EXPORT_PORT in the bot's .env (default 15099)
 --]]
 
-local BOT_HOST      = "192.168.1.32"
+local BOT_HOST      = "127.0.0.1"
 local BOT_PORT      = 15099
 local INTERVAL_SEC  = 30
 local LOG_FILE      = lfs.writedir() .. "Logs\\atc_export.log"  --luacheck: ignore

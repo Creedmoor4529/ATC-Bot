@@ -92,7 +92,15 @@ OPENAI_API_KEY=sk-...       # if using OpenAI
 GROQ_API_KEY=gsk_...        # if using Groq (free)
 ```
 
-Then edit `config.lua` to match your airfield and preferences (see Configuration below).
+Then copy the example config files and edit them for your airfield:
+
+```bash
+cp config.lua.example config.lua
+cp dcs_atc_export.lua.example dcs_atc_export.lua
+```
+
+Edit `config.lua` to match your airfield and preferences (see Configuration below).
+Copy `dcs_atc_export.lua` to your DCS hooks folder (`%USERPROFILE%\Saved Games\DCS\Scripts\Hooks\`) and set `BOT_HOST` to your bot machine's IP.
 
 ### 5. Enable Tacview real-time telemetry
 
@@ -358,7 +366,8 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 
 | File | Purpose |
 |------|---------|
-| `config.lua` | Main user configuration — airfield, callsign, frequencies, AI provider |
+| `config.lua.example` | Example configuration — copy to `config.lua` and edit for your airfield |
+| `dcs_atc_export.lua.example` | Example DCS hook — copy to `dcs_atc_export.lua` and install in DCS hooks folder |
 | `.env` | Secret keys (API keys, server addresses) — never committed to git |
 | `dcs_atc_export.lua` | DCS Lua hook — install to Saved Games/DCS_Server Instance/Scripts/Hooks/ |
 | `main.py` | Bot entry point and audio pipeline |

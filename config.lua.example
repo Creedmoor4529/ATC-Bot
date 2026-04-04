@@ -1,5 +1,5 @@
 -- DCS ATC Bot — Operational Configuration
--- Edit this file to configure the bot for your airfield.
+-- Copy this file to "config.lua" and edit it for your airfield.
 -- Restart the bot after making changes.
 
 -- =========================================================================
@@ -80,7 +80,7 @@
 --   OAMN  Zaranj
 --
 -- KOLA
---   ENBO  Bodø                      ENEV  Evenes (Harstad/Narvik)
+--   ENBO  Bod??                      ENEV  Evenes (Harstad/Narvik)
 --   ENLK  Leknes                    ENKR  Kirkenes
 --   ENMH  Mehamn                    ULKK  Murmansk
 --   ULMK  Monchegorsk               ULAS  Severomorsk-1
@@ -92,18 +92,18 @@
 -- REQUIRED — set these values for your airfield
 -- =========================================================================
 
-AIRPORT_ICAO  = "LCRA"      -- ICAO code from the list above
-ATC_CALLSIGN  = "Akrotiri"  -- Callsign used on SRS and in ATC responses
+AIRPORT_ICAO  = "UGKO"      -- ICAO code from the list above
+ATC_CALLSIGN  = "Kutaisi"   -- Callsign used on SRS and in ATC responses
 
 -- Radio frequencies in Hz. Set all six values for your airfield.
 -- Approach/Tower/Ground can share a frequency — pilots only need one to tune.
 -- _2 frequencies are secondary (UHF military band). Set to 0 to disable.
-FREQ_APPROACH   = 119000000   -- Approach primary   (VHF, Hz)
-FREQ_APPROACH_2 = 257000000   -- Approach secondary (UHF, Hz)  — 0 to disable
-FREQ_TOWER      = 119500000   -- Tower primary      (VHF, Hz)
-FREQ_TOWER_2    = 257500000   -- Tower secondary    (UHF, Hz)  — 0 to disable
-FREQ_GROUND     = 118000000   -- Ground primary     (VHF, Hz)
-FREQ_GROUND_2   = 258000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
+FREQ_APPROACH   = 130000000   -- Approach primary   (VHF, Hz)
+FREQ_APPROACH_2 = 260000000   -- Approach secondary (UHF, Hz)  — 0 to disable
+FREQ_TOWER      = 131000000   -- Tower primary      (VHF, Hz)
+FREQ_TOWER_2    = 261000000   -- Tower secondary    (UHF, Hz)  — 0 to disable
+FREQ_GROUND     = 132000000   -- Ground primary     (VHF, Hz)
+FREQ_GROUND_2   = 262000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 
 -- =========================================================================
 -- OPTIONAL OVERRIDES
@@ -112,7 +112,7 @@ FREQ_GROUND_2   = 258000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 -- =========================================================================
 
 -- Active runway (auto: primary ILS runway from database)
-ACTIVE_RUNWAY = "28"
+-- ACTIVE_RUNWAY = "07"
 
 -- Magnetic variation in degrees east (auto: by map region)
 -- MAGNETIC_VAR = 4.5
@@ -126,8 +126,8 @@ ACTIVE_RUNWAY = "28"
 -- MSA_FT = 2000
 
 -- Bot SRS position (auto: resolved from AIRPORT_ICAO)
-BOT_LAT = 34.590
-BOT_LON = 32.987
+-- BOT_LAT = 42.176
+-- BOT_LON = 42.482
 -- BOT_ALT = 10000
 
 -- -------------------------------------------------------------------------

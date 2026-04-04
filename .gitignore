@@ -14,6 +14,10 @@ AIRFIELD_NAVAIDS.txt
 # Release archives
 *.zip
 
+# Personal config — users copy from .example files
+config.lua
+dcs_atc_export.lua
+
 # Compiled launcher
 *.exe
 
