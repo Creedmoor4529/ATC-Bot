@@ -116,11 +116,12 @@ class _WeatherProtocol(asyncio.DatagramProtocol):
         try:
             msg = json.loads(data.decode("utf-8"))
             if "error" in msg:
-                logger.warning(f"DCS export error: {msg['error']}")
+                logger.debug(f"DCS export error: {msg['error']}")
                 return
             self.weather.update(msg)
         except Exception as e:
-            logger.debug(f"DCS export parse error: {e} | raw={data[:80]!r}")
+            # DCS internal errors arrive as raw Lua error strings, not JSON
+            logger.debug(f"DCS export: ignoring non-JSON packet ({len(data)} bytes)")
 
     def error_received(self, exc):
         logger.debug(f"DCS export socket error: {exc}")

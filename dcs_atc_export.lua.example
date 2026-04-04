@@ -42,43 +42,70 @@ local function send(payload)
 end
 
 
--- Map-origin query position, updated on mission load.
--- y = terrain height + 2m so the point is always above ground on any map.
-local queryPosition = {x = 0, y = 100, z = 0}
+-- Cached mission weather, refreshed on each mission load.
+local cachedWeather = nil
 
-local function updateQueryPosition()
-    -- Try to resolve a sensible above-ground point at the map origin.
-    -- land.getHeight is available in the hook environment and works on every map.
-    local ok, h = pcall(land.getHeight, {x = 0, z = 0})  --luacheck: ignore land
-    if ok and h and h >= 0 then
-        queryPosition = {x = 0, y = h + 2, z = 0}
-    else
-        queryPosition = {x = 0, y = 100, z = 0}
+local function loadMissionWeather()
+    -- DCS.getCurrentMission() returns the full mission table in the hook env.
+    -- This gives us the exact weather the mission editor set, not a position query.
+    local ok, mission = pcall(DCS.getCurrentMission)  --luacheck: ignore
+    if not ok or not mission or not mission.mission then
+        log("ERROR: DCS.getCurrentMission() failed: " .. tostring(mission))
+        return
     end
-    log("queryPosition set: y=" .. tostring(queryPosition.y))
+
+    local weather = mission.mission.weather
+    if not weather then
+        log("ERROR: no weather table in mission")
+        return
+    end
+
+    -- Ground wind layer
+    local gnd = weather.wind and weather.wind.atGround
+    local wind_speed_ms = 0
+    local wind_dir      = 0
+    if gnd then
+        wind_speed_ms = (gnd.speed or 0)
+        wind_dir      = (gnd.dir   or 0)
+        -- DCS mission editor stores wind direction as "blows TO" in degrees.
+        -- ATC convention is "wind FROM", so add 180.
+        wind_dir = (wind_dir + 180) % 360
+    end
+
+    -- Temperature at sea level from weather.season.temperature
+    local temp_c = 15
+    if weather.season and weather.season.temperature then
+        temp_c = weather.season.temperature
+    end
+
+    -- QNH from weather.qnh — DCS stores this in mmHg; convert to hPa
+    local pressure_hpa = 1013.25
+    if weather.qnh then
+        pressure_hpa = weather.qnh * 1.33322
+    end
+
+    cachedWeather = {
+        wind_dir      = wind_dir,
+        wind_speed_ms = wind_speed_ms,
+        pressure_hpa  = pressure_hpa,
+        temp_c        = temp_c,
+    }
+
+    log(string.format(
+        "Mission weather loaded: wind FROM %.0f at %.1f m/s, QNH %.1f hPa, temp %.1f C",
+        wind_dir, wind_speed_ms, pressure_hpa, temp_c
+    ))
 end
 
 local function queryWeather()
-    -- Weather singleton is available directly in the hook (GameGUI) environment.
-    -- Returns live runtime values including dynamic weather — not static mission config.
-    -- queryPosition is resolved at mission load so this works on any DCS map.
-    local position = queryPosition
+    if not cachedWeather then
+        return nil
+    end
 
-    local wind     = Weather.getGroundWindAtPoint({position = position})       --luacheck: ignore
-    local temp_k, pressure_pa = Weather.getTemperatureAndPressureAtPoint({     --luacheck: ignore
-        position = position
-    })
-
-    -- wind.v = speed m/s, wind.a = direction FROM in degrees true
-    -- temp_k is already in Celsius (despite the name; DCS returns C not K here)
-    local wind_speed   = wind.v
-    local wind_dir     = wind.a
-    local temp_c       = temp_k
-    local pressure_hpa = pressure_pa / 100.0
-
+    local w = cachedWeather
     return string.format(
         '{"wind_dir":%g,"wind_speed_ms":%g,"pressure_hpa":%g,"temp_c":%g}',
-        wind_dir, wind_speed, pressure_hpa, temp_c
+        w.wind_dir, w.wind_speed_ms, w.pressure_hpa, w.temp_c
     )
 end
 
@@ -87,7 +114,7 @@ local callbacks = {}
 
 function callbacks.onMissionLoadEnd()
     log("onMissionLoadEnd fired. socket=" .. tostring(socketOk))
-    updateQueryPosition()
+    loadMissionWeather()
     send('{"status":"hook_alive"}')
     lastSent = 0
 end
