@@ -21,6 +21,9 @@ dcs_atc_export.lua
 # Generated launcher
 start.sh
 
+# Personal autostart config
+autostart.conf
+
 # Compiled launcher
 *.exe
 

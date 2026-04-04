@@ -35,7 +35,7 @@ The install script will:
 - Create a Python virtual environment (`.venv/`)
 - Install Python dependencies
 - Download and extract Piper TTS
-- Download the `en_US-amy-medium` voice model
+- Download the voice model set in `config.lua` (default: `en_US-amy-medium`)
 - Create `.env` from `.env.example`
 
 #### NVIDIA GPU support (optional but recommended)
@@ -147,6 +147,7 @@ All operational settings are in `config.lua`. The file is self-documented with a
 | `FREQ_TOWER` | Tower frequency in Hz |
 | `FREQ_GROUND` | Ground frequency in Hz |
 | `INSTRUCTIONS` | Optional custom ATC instructions appended to the system prompt |
+| `PIPER_VOICE` | Voice model name e.g. `"en_GB-alan-medium"` — see [available voices](https://huggingface.co/rhasspy/piper-voices) |
 | `DCS_CHAT_ENABLED` | `true` to post ATC responses in DCS in-game chat (default: `true`) |
 | `DCS_CHAT_PORT` | UDP port the Lua hook listens on for chat (default: `15100`) |
 

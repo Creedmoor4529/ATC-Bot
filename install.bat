@@ -45,18 +45,43 @@ if exist "piper\piper.exe" (
     )
 )
 
+:: --- Read voice name from config.lua ---------------------------------------
+set "VOICE_NAME=en_US-amy-medium"
+if exist "config.lua" (
+    for /f "tokens=1,* delims==" %%a in ('findstr /R "^PIPER_VOICE" config.lua') do (
+        set "VRAW=%%b"
+        for /f "tokens=*" %%v in ("!VRAW!") do set "VRAW=%%v"
+        set "VRAW=!VRAW:"=!"
+        set "VRAW=!VRAW:'=!"
+        for /f "tokens=*" %%v in ("!VRAW!") do set "VOICE_NAME=%%v"
+    )
+)
+
 :: --- Download voice model --------------------------------------------------
 echo.
-echo [3/4] Setting up voice model (en_US-amy-medium)...
-if exist "piper\voices\en_US-amy-medium.onnx" (
+echo [3/4] Setting up voice model (!VOICE_NAME!)...
+if exist "piper\voices\!VOICE_NAME!.onnx" (
     echo [OK] Voice model already present, skipping.
 ) else (
     mkdir piper\voices 2>nul
-    set BASE_URL=https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium
-    echo Downloading voice model ^(this may take a moment^)...
-    powershell -Command "Invoke-WebRequest -Uri '!BASE_URL!/en_US-amy-medium.onnx' -OutFile 'piper\voices\en_US-amy-medium.onnx' -UseBasicParsing"
-    powershell -Command "Invoke-WebRequest -Uri '!BASE_URL!/en_US-amy-medium.onnx.json' -OutFile 'piper\voices\en_US-amy-medium.onnx.json' -UseBasicParsing"
-    if exist "piper\voices\en_US-amy-medium.onnx" (
+    :: Parse voice name: en_US-amy-medium → en/en_US/amy/medium
+    for /f "tokens=1,2 delims=-" %%a in ("!VOICE_NAME!") do (
+        set "V_LANG=%%a"
+        set "V_REST=%%b"
+    )
+    :: Extract language prefix (e.g. en from en_US)
+    for /f "tokens=1 delims=_" %%l in ("!V_LANG!") do set "V_LANGPRE=%%l"
+    :: Build path: rest is "name-quality" → name/quality
+    for /f "tokens=1,* delims=-" %%n in ("!V_REST!") do (
+        set "V_SPEAKER=%%n"
+        set "V_QUALITY=%%o"
+    )
+    set "VOICE_URL=https://huggingface.co/rhasspy/piper-voices/resolve/main/!V_LANGPRE!/!V_LANG!/!V_SPEAKER!/!V_QUALITY!"
+    echo Downloading voice model from HuggingFace...
+    echo URL: !VOICE_URL!
+    powershell -Command "Invoke-WebRequest -Uri '!VOICE_URL!/!VOICE_NAME!.onnx' -OutFile 'piper\voices\!VOICE_NAME!.onnx' -UseBasicParsing"
+    powershell -Command "Invoke-WebRequest -Uri '!VOICE_URL!/!VOICE_NAME!.onnx.json' -OutFile 'piper\voices\!VOICE_NAME!.onnx.json' -UseBasicParsing"
+    if exist "piper\voices\!VOICE_NAME!.onnx" (
         echo [OK] Voice model downloaded.
     ) else (
         echo [ERROR] Voice model download failed.

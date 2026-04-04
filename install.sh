@@ -74,19 +74,37 @@ else
     fi
 fi
 
+# --- Read voice name from config.lua ---------------------------------------
+VOICE_NAME="en_US-amy-medium"
+if [ -f "config.lua" ]; then
+    _v=$(grep -m1 '^PIPER_VOICE' config.lua | sed 's/.*=\s*//;s/["'"'"']//g;s/\s*--.*//' | xargs)
+    [ -n "$_v" ] && VOICE_NAME="$_v"
+fi
+
 # --- Download voice model --------------------------------------------------
 echo
-echo "[4/4] Setting up voice model (en_US-amy-medium)..."
-BASE_URL="https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium"
+echo "[4/4] Setting up voice model ($VOICE_NAME)..."
 mkdir -p piper/voices
 
-if [ -f "piper/voices/en_US-amy-medium.onnx" ]; then
+if [ -f "piper/voices/${VOICE_NAME}.onnx" ]; then
     echo "[OK] Voice model already present, skipping."
 else
-    echo "Downloading voice model (this may take a moment)..."
-    curl -L "${BASE_URL}/en_US-amy-medium.onnx"      -o piper/voices/en_US-amy-medium.onnx
-    curl -L "${BASE_URL}/en_US-amy-medium.onnx.json" -o piper/voices/en_US-amy-medium.onnx.json
-    echo "[OK] Voice model downloaded."
+    # Parse voice name: en_US-amy-medium → en/en_US/amy/medium
+    V_LOCALE=$(echo "$VOICE_NAME" | cut -d'-' -f1)        # en_US
+    V_LANGPRE=$(echo "$V_LOCALE" | cut -d'_' -f1)         # en
+    V_SPEAKER=$(echo "$VOICE_NAME" | cut -d'-' -f2)       # amy
+    V_QUALITY=$(echo "$VOICE_NAME" | cut -d'-' -f3)       # medium
+    VOICE_URL="https://huggingface.co/rhasspy/piper-voices/resolve/main/${V_LANGPRE}/${V_LOCALE}/${V_SPEAKER}/${V_QUALITY}"
+    echo "Downloading voice model from HuggingFace..."
+    echo "URL: $VOICE_URL"
+    curl -L "${VOICE_URL}/${VOICE_NAME}.onnx"      -o "piper/voices/${VOICE_NAME}.onnx"
+    curl -L "${VOICE_URL}/${VOICE_NAME}.onnx.json" -o "piper/voices/${VOICE_NAME}.onnx.json"
+    if [ -f "piper/voices/${VOICE_NAME}.onnx" ]; then
+        echo "[OK] Voice model downloaded."
+    else
+        echo "[ERROR] Voice model download failed."
+        exit 1
+    fi
 fi
 
 # --- Create .env -----------------------------------------------------------

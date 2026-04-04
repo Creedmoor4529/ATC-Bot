@@ -87,7 +87,12 @@ TACVIEW_PASSWORD = os.getenv("TACVIEW_PASSWORD", "")
 
 # Piper TTS
 PIPER_EXE   = os.getenv("PIPER_EXE",   "piper/piper.exe")
-PIPER_VOICE = os.getenv("PIPER_VOICE", "piper/voices/en_US-amy-medium.onnx")
+_voice_name = _get("PIPER_VOICE", "PIPER_VOICE", "en_US-amy-medium", str)
+# Accept bare voice name or full path
+if os.sep in _voice_name or "/" in _voice_name:
+    PIPER_VOICE = _voice_name
+else:
+    PIPER_VOICE = f"piper/voices/{_voice_name}.onnx"
 
 # Whisper
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "distil-large-v3")

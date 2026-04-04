@@ -140,6 +140,19 @@ FREQ_GROUND_2   = 262000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 -- TACAN_MDA_FT = 476           -- auto: airport elevation + 400 ft
 
 -- -------------------------------------------------------------------------
+-- Voice (Piper TTS)
+-- Choose a voice from https://huggingface.co/rhasspy/piper-voices
+-- The installer downloads the model files automatically.
+-- -------------------------------------------------------------------------
+-- Some good ATC voices:
+--   en_US-amy-medium              — American female (default)
+--   en_GB-alan-medium             — British male
+--   en_US-joe-medium              — American male
+--   en_US-ryan-medium             — American male, deeper
+--   en_GB-cori-medium             — British female
+PIPER_VOICE = "en_US-amy-medium"
+
+-- -------------------------------------------------------------------------
 -- AI Provider
 -- -------------------------------------------------------------------------
 -- Choose one: "openai", "groq", or "ollama"
