@@ -381,6 +381,24 @@ class ATCState:
         # True bearing from field to aircraft
         brg_to_ac = self._bearing_true(BOT_LAT, BOT_LON, ac.lat, ac.lon)
 
+        # --- Overhead break detection ---
+        # Aircraft flies the landing direction over/near the field at 800-1200ft AGL, 300-400kts
+        if (dist < 3
+                and 800 <= alt_agl <= 1200
+                and 300 <= ac.speed_kts <= 400
+                and self._angle_diff(ac_hdg_mag, _RWY_HEADING) <= 20):
+            label = (ac.pilot or ac.group or ac.name or ac.object_id).upper()
+            return {
+                "callsign": label,
+                "dist_nm":  round(dist, 1),
+                "alt_ft":   round(ac.alt_ft),
+                "heading":  round(ac_hdg_mag),
+                "speed_kts": round(ac.speed_kts),
+                "runway":   ACTIVE_RUNWAY,
+                "type":     ac.name or "",
+                "pattern":  "overhead_break",
+            }
+
         # Check alignment with either runway direction
         for rwy_hdg, rwy_label in [(_RWY_HEADING, ACTIVE_RUNWAY),
                                     (_RWY_RECIP, self._reciprocal_designator(ACTIVE_RUNWAY))]:
@@ -394,6 +412,12 @@ class ATCState:
             if self._angle_diff(brg_to_ac, approach_bearing) > 30:
                 continue
 
+            # Glide slope check: nominal 3° with ±4° tolerance (valid: ~0° to 7°)
+            dist_ft = dist * 6076.12  # nm to feet
+            glide_angle = math.degrees(math.atan2(alt_agl, dist_ft))
+            if glide_angle > 7.0:
+                continue  # too steep — not on a realistic approach
+
             label = (ac.pilot or ac.group or ac.name or ac.object_id).upper()
             return {
                 "callsign": label,
@@ -403,6 +427,7 @@ class ATCState:
                 "speed_kts": round(ac.speed_kts),
                 "runway":   rwy_label,
                 "type":     ac.name or "",
+                "pattern":  "approach",
             }
 
         return None
@@ -617,11 +642,12 @@ class ATCState:
         if self.detected_approaches:
             lines.append(f"\nDETECTED APPROACHES (no radio contact — from radar):")
             for ap in sorted(self.detected_approaches, key=lambda a: a["dist_nm"]):
+                pattern_tag = "OVERHEAD BREAK" if ap.get("pattern") == "overhead_break" else "APPROACH"
                 lines.append(
                     f"  {ap['callsign']} | {ap['type']} | "
                     f"RWY {ap['runway']} | {ap['dist_nm']}nm | "
                     f"ALT {ap['alt_ft']}ft | HDG {ap['heading']} | "
-                    f"SPD {ap['speed_kts']}kts | NO RADIO CONTACT"
+                    f"SPD {ap['speed_kts']}kts | {pattern_tag} | NO RADIO CONTACT"
                 )
 
         return "\n".join(lines)
