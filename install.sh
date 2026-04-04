@@ -103,6 +103,21 @@ if ! grep -q "^PIPER_EXE" .env; then
     echo "PIPER_EXE=piper/piper" >> .env
 fi
 
+# --- Create start.sh launcher ------------------------------------------------
+cat > start.sh << 'LAUNCHER'
+#!/usr/bin/env bash
+# DCS ATC Bot — Linux launcher
+cd "$(dirname "$0")"
+if [ ! -d ".venv" ]; then
+    echo "Virtual environment not found. Run install.sh first."
+    exit 1
+fi
+source .venv/bin/activate
+exec python3 main.py
+LAUNCHER
+chmod +x start.sh
+echo "[OK] start.sh created."
+
 # --- Done ------------------------------------------------------------------
 echo
 echo "============================================================"
@@ -114,6 +129,6 @@ echo "   2. Edit config.lua to set your airfield and frequencies"
 echo "   3. Install dcs_atc_export.lua on the Windows DCS machine:"
 echo "      %USERPROFILE%\\Saved Games\\DCS\\Scripts\\Hooks\\"
 echo "   4. Set BOT_HOST in dcs_atc_export.lua to this machine's IP"
-echo "   5. Run: source .venv/bin/activate && python3 main.py"
+echo "   5. Run: ./start.sh"
 echo "============================================================"
 echo

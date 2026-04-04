@@ -18,6 +18,9 @@ AIRFIELD_NAVAIDS.txt
 config.lua
 dcs_atc_export.lua
 
+# Generated launcher
+start.sh
+
 # Compiled launcher
 *.exe
 
