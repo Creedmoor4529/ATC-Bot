@@ -163,3 +163,11 @@ AI_PROVIDER = "openai"
 -- Use this to describe local procedures, traffic patterns, or special rules.
 -- -------------------------------------------------------------------------
 -- INSTRUCTIONS = "Expect fast jet traffic. Prefer straight-in approaches on runway 28. All aircraft report 10 nautical miles."
+
+-- -------------------------------------------------------------------------
+-- DCS In-Game Chat
+-- When enabled, ATC responses are also posted to the DCS in-game chat.
+-- Requires the updated dcs_atc_export.lua hook (v2+).
+-- -------------------------------------------------------------------------
+DCS_CHAT_ENABLED = true        -- set to false to disable chat messages
+-- DCS_CHAT_PORT = 15100       -- UDP port the Lua hook listens on (must match dcs_atc_export.lua)

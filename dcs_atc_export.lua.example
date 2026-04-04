@@ -14,16 +14,22 @@
 
 local BOT_HOST      = "127.0.0.1"
 local BOT_PORT      = 15099
+local CHAT_PORT     = 15100       -- UDP port to receive chat messages from the bot
 local INTERVAL_SEC  = 30
 local LOG_FILE      = lfs.writedir() .. "Logs\\atc_export.log"  --luacheck: ignore
 
 -- ---------------------------------------------------------------------------
 
 local udp = nil
+local chatUdp = nil
 local socketOk, socketLib = pcall(require, "socket")
 if socketOk then
     udp = socketLib.udp()
     udp:settimeout(0)
+    -- Receive socket: bot sends chat messages here
+    chatUdp = socketLib.udp()
+    chatUdp:settimeout(0)
+    chatUdp:setsockname("0.0.0.0", CHAT_PORT)
 end
 
 local function log(msg)
@@ -120,6 +126,15 @@ function callbacks.onMissionLoadEnd()
 end
 
 function callbacks.onSimulationFrame()
+    -- Poll for incoming chat messages from the bot (non-blocking)
+    if chatUdp then
+        local data = chatUdp:receive()
+        if data then
+            log("CHAT: " .. data)
+            net.send_chat(data, true)  --luacheck: ignore
+        end
+    end
+
     local now = os.time()
     if now - lastSent < INTERVAL_SEC then return end
     lastSent = now
@@ -133,5 +148,5 @@ function callbacks.onSimulationFrame()
     end
 end
 
-log("Script loaded. socket=" .. tostring(socketOk))
+log("Script loaded. socket=" .. tostring(socketOk) .. " chatPort=" .. tostring(CHAT_PORT))
 DCS.setUserCallbacks(callbacks)  --luacheck: ignore

@@ -38,7 +38,7 @@ from components.atc_state import ATCState
 from components.srs_client import SRSAudioBot, SRSClient, SRSRadio, MODULATION_AM
 from components.stt_engine import transcribe, preload as preload_whisper
 from components.tacview_client import TacviewClient
-from components.dcs_export import DCSWeather, DCSExportListener
+from components.dcs_export import DCSWeather, DCSExportListener, DCSChatSender
 from components.tts_engine import synthesize, check_piper_available
 from config import (
     ATC_CALLSIGN, AUDIO_SAMPLE_RATE, SRS_COALITION,
@@ -156,6 +156,7 @@ class ATCBot:
         self.tacview = TacviewClient()
         self.weather = DCSWeather()
         self.dcs_export = DCSExportListener(self.weather)
+        self.chat = DCSChatSender()
         self.accumulator = AudioAccumulator(self._on_transmission)
         # pending readbacks keyed by frequency: {clearance, pilot_callsign, atc_callsign, radio_index, expires}
         self._pending_readbacks: dict[float, dict] = {}
@@ -341,6 +342,7 @@ class ATCBot:
             )
             if reply:
                 logger.info(f"Readback reply: {reply!r}")
+                self.chat.send(reply)
                 pcm_reply = await synthesize(reply)
                 if pcm_reply:
                     await self.srs.transmit(pcm_reply, radio_index=pending["radio_index"])
@@ -399,6 +401,7 @@ class ATCBot:
         )
         if wrong_freq_reply:
             logger.info(f"Frequency mismatch response: {wrong_freq_reply!r}")
+            self.chat.send(wrong_freq_reply)
             pcm_reply = await synthesize(wrong_freq_reply)
             if pcm_reply:
                 await self.srs.transmit(pcm_reply, radio_index=radio_index)
@@ -430,6 +433,7 @@ class ATCBot:
         if not response:
             return
         logger.info(f"ATC response: {response!r}")
+        self.chat.send(response)
 
         # 5b. Altitude-hold queue management
         if pilot_callsign:
@@ -534,6 +538,7 @@ class ATCBot:
         )
         if not clearance:
             return
+        self.chat.send(clearance)
         pcm = await synthesize(clearance)
         if not pcm:
             return
@@ -639,6 +644,7 @@ class ATCBot:
         if not warning:
             return
         logger.info(f"Traffic warning → {pilot_callsign}: {warning!r}")
+        self.chat.send(warning)
         pcm = await synthesize(warning)
         if not pcm:
             return
@@ -687,6 +693,7 @@ class ATCBot:
         if not clearance:
             return
         logger.info(f"Post-conflict clearance → {pilot_callsign}: {clearance!r}")
+        self.chat.send(clearance)
         pcm = await synthesize(clearance)
         if not pcm:
             return
@@ -767,6 +774,7 @@ class ATCBot:
         if not clearance:
             return
         logger.info(f"Sequence clearance → {pilot_callsign}: {clearance!r}")
+        self.chat.send(clearance)
         pcm = await synthesize(clearance)
         if not pcm:
             return

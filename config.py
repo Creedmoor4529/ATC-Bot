@@ -37,6 +37,10 @@ def _load_lua_config(path: str) -> dict:
             key, raw = m.group(1), m.group(2).strip().rstrip(",")
             if raw.startswith('"') or raw.startswith("'"):
                 result[key] = raw.strip('"\'')
+            elif raw == "true":
+                result[key] = True
+            elif raw == "false":
+                result[key] = False
             else:
                 try:
                     result[key] = int(raw) if "." not in raw else float(raw)
@@ -96,6 +100,9 @@ AUDIO_SAMPLE_RATE = 16000
 AUDIO_CHANNELS    = 1
 
 DCS_EXPORT_PORT = int(os.getenv("DCS_EXPORT_PORT", "15099"))
+DCS_CHAT_ENABLED = _get("DCS_CHAT_ENABLED", "DCS_CHAT_ENABLED", True, bool)
+DCS_CHAT_PORT    = _get("DCS_CHAT_PORT",    "DCS_CHAT_PORT",    15100, int)
+DCS_CHAT_HOST    = os.getenv("DCS_CHAT_HOST", os.getenv("TACVIEW_HOST", "127.0.0.1"))
 
 # ---------------------------------------------------------------------------
 # Operational config — driven by config.lua, overridable via .env

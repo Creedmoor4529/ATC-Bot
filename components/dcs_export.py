@@ -15,9 +15,10 @@ Data received (JSON):
 import asyncio
 import json
 import logging
+import socket
 import time
 
-from config import MAGNETIC_VAR, DCS_EXPORT_PORT
+from config import MAGNETIC_VAR, DCS_EXPORT_PORT, DCS_CHAT_ENABLED, DCS_CHAT_PORT, DCS_CHAT_HOST
 
 logger = logging.getLogger(__name__)
 
@@ -125,3 +126,25 @@ class _WeatherProtocol(asyncio.DatagramProtocol):
 
     def error_received(self, exc):
         logger.debug(f"DCS export socket error: {exc}")
+
+
+class DCSChatSender:
+    """Sends text messages to the DCS Lua hook for in-game chat display."""
+
+    def __init__(self, dcs_host: str = DCS_CHAT_HOST, port: int = DCS_CHAT_PORT):
+        self.enabled = DCS_CHAT_ENABLED
+        self._host = dcs_host
+        self._port = port
+        self._sock: socket.socket | None = None
+        if self.enabled:
+            self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            logger.info(f"DCS chat sender ready → {self._host}:{self._port}")
+
+    def send(self, message: str):
+        """Send a chat message to the DCS hook. Silently drops if disabled or errored."""
+        if not self.enabled or not self._sock:
+            return
+        try:
+            self._sock.sendto(message.encode("utf-8"), (self._host, self._port))
+        except Exception as e:
+            logger.debug(f"DCS chat send error: {e}")

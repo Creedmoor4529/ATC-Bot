@@ -147,6 +147,17 @@ All operational settings are in `config.lua`. The file is self-documented with a
 | `FREQ_TOWER` | Tower frequency in Hz |
 | `FREQ_GROUND` | Ground frequency in Hz |
 | `INSTRUCTIONS` | Optional custom ATC instructions appended to the system prompt |
+| `DCS_CHAT_ENABLED` | `true` to post ATC responses in DCS in-game chat (default: `true`) |
+| `DCS_CHAT_PORT` | UDP port the Lua hook listens on for chat (default: `15100`) |
+
+### DCS In-Game Chat
+
+When enabled, every ATC response is also posted to the DCS in-game text chat so pilots can read what was said. This is useful when TTS audio is hard to understand or when reviewing instructions.
+
+- Enabled by default. Set `DCS_CHAT_ENABLED = false` in `config.lua` to disable.
+- Requires the updated `dcs_atc_export.lua` hook (re-copy to your DCS hooks folder after updating).
+- The bot sends UDP to the DCS machine on port `15100` (configurable via `DCS_CHAT_PORT`).
+- If the bot runs on a different machine than DCS, set `DCS_CHAT_HOST` in `.env` to the DCS server's IP.
 
 ### Logging
 
