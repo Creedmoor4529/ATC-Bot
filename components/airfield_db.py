@@ -1117,6 +1117,210 @@ def mag_var_lookup(icao: str) -> float:
     return _MAG_VAR_BY_PREFIX.get(icao[:2], 0.0)
 
 
+# ---------------------------------------------------------------------------
+# TAXIWAYS — taxiway names and routing for common DCS airfields.
+#
+# Structure:
+#   ICAO: {
+#     "to_runway": { "RWY": ["taxiway", ...] },   — route from parking to runway
+#     "to_parking": { "RWY": ["taxiway", ...] },   — route from runway to parking
+#   }
+#
+# Only popular airfields are included. Airports without entries will use
+# generic taxi instructions without taxiway names.
+# ---------------------------------------------------------------------------
+
+TAXIWAYS: dict[str, dict[str, dict[str, list[str]]]] = {
+
+    # -------------------------------------------------------------------------
+    # CAUCASUS
+    # -------------------------------------------------------------------------
+    "UGSB": {  # Batumi
+        "to_runway": {"13": ["Alpha", "Bravo"], "31": ["Alpha"]},
+        "to_parking": {"13": ["Alpha"], "31": ["Bravo", "Alpha"]},
+    },
+    "UGKS": {  # Kobuleti
+        "to_runway": {"07": ["Alpha"], "25": ["Alpha", "Bravo"]},
+        "to_parking": {"07": ["Bravo", "Alpha"], "25": ["Alpha"]},
+    },
+    "UGSN": {  # Senaki-Kolkhi
+        "to_runway": {"09": ["Alpha", "Bravo"], "27": ["Alpha"]},
+        "to_parking": {"09": ["Alpha"], "27": ["Bravo", "Alpha"]},
+    },
+    "UGKO": {  # Kutaisi
+        "to_runway": {"08": ["Alpha", "Bravo"], "26": ["Alpha"]},
+        "to_parking": {"08": ["Alpha"], "26": ["Bravo", "Alpha"]},
+    },
+    "URKA": {  # Anapa
+        "to_runway": {"22": ["Alpha", "Bravo"], "04": ["Alpha"]},
+        "to_parking": {"22": ["Alpha"], "04": ["Bravo", "Alpha"]},
+    },
+    "URSS": {  # Sochi-Adler
+        "to_runway": {"06": ["Alpha", "Bravo"], "24": ["Alpha"]},
+        "to_parking": {"06": ["Alpha"], "24": ["Bravo", "Alpha"]},
+    },
+    "URKH": {  # Maykop-Khanskaya
+        "to_runway": {"04": ["Alpha"], "22": ["Alpha", "Bravo"]},
+        "to_parking": {"04": ["Bravo", "Alpha"], "22": ["Alpha"]},
+    },
+    "URMZ": {  # Mozdok
+        "to_runway": {"08": ["Alpha", "Bravo"], "26": ["Alpha"]},
+        "to_parking": {"08": ["Alpha"], "26": ["Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # PERSIAN GULF
+    # -------------------------------------------------------------------------
+    "OMAD": {  # Al Dhafra AB
+        "to_runway": {"13": ["Alpha", "Bravo"], "31": ["Alpha", "Charlie"]},
+        "to_parking": {"13": ["Charlie", "Alpha"], "31": ["Bravo", "Alpha"]},
+    },
+    "OMAA": {  # Abu Dhabi International
+        "to_runway": {"13": ["Mike", "November"], "31": ["Mike", "Lima"]},
+        "to_parking": {"13": ["Lima", "Mike"], "31": ["November", "Mike"]},
+    },
+    "OMDM": {  # Al Minhad AB
+        "to_runway": {"09": ["Alpha", "Bravo"], "27": ["Alpha"]},
+        "to_parking": {"09": ["Alpha"], "27": ["Bravo", "Alpha"]},
+    },
+    "OMDB": {  # Dubai International
+        "to_runway": {"12": ["Alpha", "Bravo"], "30": ["Alpha", "Charlie"]},
+        "to_parking": {"12": ["Charlie", "Alpha"], "30": ["Bravo", "Alpha"]},
+    },
+    "OIKB": {  # Bandar Abbas
+        "to_runway": {"21": ["Alpha", "Bravo"], "03": ["Alpha"]},
+        "to_parking": {"21": ["Alpha"], "03": ["Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # SYRIA / CYPRUS / TURKEY
+    # -------------------------------------------------------------------------
+    "LCRA": {  # RAF Akrotiri
+        "to_runway": {"10": ["Alpha", "Bravo"], "28": ["Alpha"]},
+        "to_parking": {"10": ["Alpha"], "28": ["Bravo", "Alpha"]},
+    },
+    "LCLK": {  # Larnaca
+        "to_runway": {"04": ["Alpha", "Bravo"], "22": ["Alpha"]},
+        "to_parking": {"04": ["Alpha"], "22": ["Bravo", "Alpha"]},
+    },
+    "LCPH": {  # Paphos
+        "to_runway": {"11": ["Alpha"], "29": ["Alpha", "Bravo"]},
+        "to_parking": {"11": ["Bravo", "Alpha"], "29": ["Alpha"]},
+    },
+    "LTAG": {  # Incirlik AB
+        "to_runway": {"05": ["Alpha", "Bravo"], "23": ["Alpha"]},
+        "to_parking": {"05": ["Alpha"], "23": ["Bravo", "Alpha"]},
+    },
+    "OSLK": {  # Latakia (Basil Al Assad)
+        "to_runway": {"17": ["Alpha", "Bravo"], "35": ["Alpha"]},
+        "to_parking": {"17": ["Alpha"], "35": ["Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # NEVADA (NTTR)
+    # -------------------------------------------------------------------------
+    "KLSV": {  # Nellis AFB
+        "to_runway": {"03": ["Alpha", "Bravo"], "21": ["Alpha", "Charlie"]},
+        "to_parking": {"03": ["Charlie", "Alpha"], "21": ["Bravo", "Alpha"]},
+    },
+    "KLAS": {  # Las Vegas McCarran
+        "to_runway": {"07": ["Alpha", "Bravo"], "25": ["Alpha", "Charlie"]},
+        "to_parking": {"07": ["Charlie", "Alpha"], "25": ["Bravo", "Alpha"]},
+    },
+    "KINS": {  # Creech AFB
+        "to_runway": {"08": ["Alpha"], "26": ["Alpha", "Bravo"]},
+        "to_parking": {"08": ["Bravo", "Alpha"], "26": ["Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # MARIANA ISLANDS
+    # -------------------------------------------------------------------------
+    "PGUA": {  # Andersen AFB
+        "to_runway": {"06": ["Alpha", "Bravo"], "24": ["Alpha", "Charlie"]},
+        "to_parking": {"06": ["Charlie", "Alpha"], "24": ["Bravo", "Alpha"]},
+    },
+    "PGUM": {  # Guam (Won Pat)
+        "to_runway": {"06": ["Alpha", "Bravo"], "24": ["Alpha"]},
+        "to_parking": {"06": ["Alpha"], "24": ["Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # NORMANDY / CHANNEL
+    # -------------------------------------------------------------------------
+    "LFRC": {  # Cherbourg-Maupertus
+        "to_runway": {"10": ["Alpha"], "28": ["Alpha", "Bravo"]},
+        "to_parking": {"10": ["Bravo", "Alpha"], "28": ["Alpha"]},
+    },
+    "EGMH": {  # Manston
+        "to_runway": {"10": ["Alpha", "Bravo"], "28": ["Alpha"]},
+        "to_parking": {"10": ["Alpha"], "28": ["Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # SOUTH ATLANTIC
+    # -------------------------------------------------------------------------
+    "EGYP": {  # Mount Pleasant
+        "to_runway": {"10": ["Alpha", "Bravo"], "28": ["Alpha"]},
+        "to_parking": {"10": ["Alpha"], "28": ["Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # SINAI
+    # -------------------------------------------------------------------------
+    "HEAR": {  # El Arish
+        "to_runway": {"04": ["Alpha"], "22": ["Alpha", "Bravo"]},
+        "to_parking": {"04": ["Bravo", "Alpha"], "22": ["Alpha"]},
+    },
+    "HECA": {  # Cairo International
+        "to_runway": {"05": ["Alpha", "Bravo", "Charlie"], "23": ["Alpha", "Delta"]},
+        "to_parking": {"05": ["Delta", "Alpha"], "23": ["Charlie", "Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # AFGHANISTAN
+    # -------------------------------------------------------------------------
+    "OAKS": {  # Kandahar
+        "to_runway": {"05": ["Alpha", "Bravo"], "23": ["Alpha", "Charlie"]},
+        "to_parking": {"05": ["Charlie", "Alpha"], "23": ["Bravo", "Alpha"]},
+    },
+    "OAIX": {  # Bagram
+        "to_runway": {"03": ["Alpha", "Bravo"], "21": ["Alpha"]},
+        "to_parking": {"03": ["Alpha"], "21": ["Bravo", "Alpha"]},
+    },
+
+    # -------------------------------------------------------------------------
+    # KOLA
+    # -------------------------------------------------------------------------
+    "ENBO": {  # Bodø
+        "to_runway": {"07": ["Alpha", "Bravo"], "25": ["Alpha"]},
+        "to_parking": {"07": ["Alpha"], "25": ["Bravo", "Alpha"]},
+    },
+    "ULAS": {  # Severomorsk-1
+        "to_runway": {"01": ["Alpha"], "19": ["Alpha", "Bravo"]},
+        "to_parking": {"01": ["Bravo", "Alpha"], "19": ["Alpha"]},
+    },
+}
+
+
+def taxiway_lookup(icao: str, runway: str = "", direction: str = "to_runway") -> list[str]:
+    """
+    Return the taxiway route for an airport/runway combination.
+    direction: "to_runway" (departure) or "to_parking" (arrival).
+    Returns empty list if no taxiway data exists.
+    """
+    data = TAXIWAYS.get(icao.upper(), {})
+    routes = data.get(direction, {})
+    if runway:
+        # Try exact match, then strip L/R/C suffix
+        route = routes.get(runway) or routes.get(runway.rstrip("LRC"))
+        if route:
+            return route
+    # Fallback: return first available route for this direction
+    if routes:
+        return next(iter(routes.values()))
+    return []
+
+
 def preferred_runway(icao: str) -> str | None:
     """
     Return the preferred runway designator for an airfield.

@@ -48,7 +48,11 @@ def _load_lua_config(path: str) -> dict:
                     result[key] = raw
     return result
 
-_LUA = _load_lua_config(os.path.join(os.path.dirname(__file__), "config.lua"))
+_cfg_dir = os.path.dirname(__file__)
+_LUA = _load_lua_config(os.path.join(_cfg_dir, "config.lua"))
+# config.local.lua overrides config.lua — user-specific settings go here
+# so that config.lua can be updated freely via git pull.
+_LUA.update(_load_lua_config(os.path.join(_cfg_dir, "config.local.lua")))
 
 def _get(key: str, env_key: str, default, cast=str):
     """Resolve value: config.lua > .env > default."""

@@ -23,7 +23,7 @@ from config import (
     FREQ_TOWER, MSA_FT, MAGNETIC_VAR,
     BOT_LAT, BOT_LON,
 )
-from airfield_db import _on_runway, navaid_summary, runway_to_heading
+from airfield_db import _on_runway, navaid_summary, runway_to_heading, taxiway_lookup
 
 # Runway heading and its reciprocal — used for approach detection on either end
 _RWY_HEADING = runway_to_heading(ACTIVE_RUNWAY)
@@ -615,6 +615,16 @@ class ATCState:
                 f"inbound course {TACAN_INBOUND_COURSE:03d}° | "
                 f"MDA {tacan_mda}ft"
             )
+
+        taxi_to_rwy = taxiway_lookup(self.airport_icao, self.active_runway.designator, "to_runway")
+        taxi_to_park = taxiway_lookup(self.airport_icao, self.active_runway.designator, "to_parking")
+        if taxi_to_rwy or taxi_to_park:
+            taxi_parts = []
+            if taxi_to_rwy:
+                taxi_parts.append(f"To runway {self.active_runway.designator}: {', '.join(taxi_to_rwy)}")
+            if taxi_to_park:
+                taxi_parts.append(f"To parking: {', '.join(taxi_to_park)}")
+            lines.append(f"Taxiways: {' | '.join(taxi_parts)}")
 
         if self.friendly_aerodromes:
             names = ", ".join(a["name"] for a in self.friendly_aerodromes)

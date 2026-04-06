@@ -15,7 +15,7 @@ AIRFIELD_NAVAIDS.txt
 *.zip
 
 # Personal config — users copy from .example files
-config.lua
+config.local.lua
 dcs_atc_export.lua
 
 # Generated launcher
