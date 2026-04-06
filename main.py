@@ -254,11 +254,17 @@ class ATCBot:
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, 60)
                 try:
+                    try:
+                        await self.tacview.disconnect()
+                    except Exception:
+                        pass
                     await self.tacview.connect()
                     logger.info("Tacview reconnected.")
                     delay = 5
                 except Exception as e:
                     logger.warning(f"Tacview reconnect failed: {e}")
+                    # Ensure _running is False so we keep retrying
+                    self.tacview._running = False
 
     async def _dcs_heartbeat_monitor_loop(self):
         """Log a warning when DCS stops sending export packets, and when it resumes."""

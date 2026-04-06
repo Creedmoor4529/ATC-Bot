@@ -126,6 +126,18 @@ class TacviewClient:
     # ------------------------------------------------------------------
 
     async def connect(self):
+        # Clean up any previous connection before reconnecting
+        if self._writer:
+            try:
+                self._writer.close()
+                await self._writer.wait_closed()
+            except Exception:
+                pass
+        self._reader = None
+        self._writer = None
+        self._running = False
+        self.objects.clear()
+
         logger.info(f"Connecting to Tacview at {TACVIEW_HOST}:{TACVIEW_PORT}")
         self._reader, self._writer = await asyncio.open_connection(
             TACVIEW_HOST, TACVIEW_PORT
