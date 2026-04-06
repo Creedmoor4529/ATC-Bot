@@ -92,15 +92,31 @@ OPENAI_API_KEY=sk-...       # if using OpenAI
 GROQ_API_KEY=gsk_...        # if using Groq (free)
 ```
 
-Then copy the example config files and edit them for your airfield:
+Then create your local config and DCS hook:
 
 ```bash
-cp config.lua.example config.lua
 cp dcs_atc_export.lua.example dcs_atc_export.lua
 ```
 
-Edit `config.lua` to match your airfield and preferences (see Configuration below).
+Create a file called `config.local.lua` in the project root with your airfield settings:
+
+```lua
+AIRPORT_ICAO  = "LCRA"
+ATC_CALLSIGN  = "Akrotiri"
+ACTIVE_RUNWAY = "28"
+FREQ_APPROACH   = 119000000
+FREQ_APPROACH_2 = 257000000
+FREQ_TOWER      = 119500000
+FREQ_TOWER_2    = 257500000
+FREQ_GROUND     = 118000000
+FREQ_GROUND_2   = 258000000
+```
+
+> **Important:** Do NOT edit `config.lua` directly — it is tracked by git and will cause merge conflicts on `git pull`. Put all your settings in `config.local.lua` instead. This file is gitignored and will never be overwritten by updates. Any value in `config.local.lua` overrides the same value in `config.lua`.
+
 Copy `dcs_atc_export.lua` to your DCS hooks folder (`%USERPROFILE%\Saved Games\DCS\Scripts\Hooks\`) and set `BOT_HOST` to your bot machine's IP.
+
+**Upgrading from an older version?** If you previously edited `config.lua` directly, rename it to `config.local.lua` and run `git checkout config.lua` to restore the default. Future `git pull` will be conflict-free.
 
 ### 5. Enable Tacview real-time telemetry
 
@@ -128,7 +144,7 @@ If the `["Tacview"]` block does not exist, add it inside the `["plugins"]` table
 
 ## Configuration
 
-All operational settings are in `config.lua`. The file is self-documented with a full airfield reference at the top.
+All operational settings are in `config.lua` (defaults) and `config.local.lua` (your overrides). The default `config.lua` is self-documented with a full airfield reference at the top. Only the values you want to change need to go in `config.local.lua`.
 
 ### Key settings
 
@@ -155,7 +171,7 @@ All operational settings are in `config.lua`. The file is self-documented with a
 
 When enabled, every ATC response is also posted to the DCS in-game text chat so pilots can read what was said. This is useful when TTS audio is hard to understand or when reviewing instructions.
 
-- Enabled by default. Set `DCS_CHAT_ENABLED = false` in `config.lua` to disable.
+- Enabled by default. Set `DCS_CHAT_ENABLED = false` in `config.local.lua` to disable.
 - Requires the updated `dcs_atc_export.lua` hook (re-copy to your DCS hooks folder after updating).
 - The bot sends UDP to the DCS machine on port `15100` (configurable via `DCS_CHAT_PORT`).
 - If the bot runs on a different machine than DCS, set `DCS_CHAT_HOST` in `.env` to the DCS server's IP.
@@ -184,7 +200,7 @@ LOG_LEVEL=INFO
 | **Ollama** | Free, local | Install from ollama.com, run `ollama pull llama3.1` |
 | **OpenAI** | Paid | Add `OPENAI_API_KEY` to `.env` |
 
-Set `AI_PROVIDER` in `config.lua` to switch between them.
+Set `AI_PROVIDER` in `config.local.lua` to switch between them.
 
 ### Speech-to-Text (Whisper) Models
 
@@ -208,7 +224,7 @@ Models are downloaded automatically from HuggingFace on first run. Smaller model
 
 ### Custom Instructions
 
-Add site-specific ATC rules to the `INSTRUCTIONS` field in `config.lua`:
+Add site-specific ATC rules to the `INSTRUCTIONS` field in `config.local.lua`:
 
 ```lua
 INSTRUCTIONS = "Expect fast jet traffic. All aircraft report 10 nautical miles. Preferred approach is straight-in runway 22."
@@ -276,7 +292,7 @@ The bot reads the portion **before the pipe** as your radio callsign. Keep it si
 
 ## Frequencies
 
-Set frequencies in `config.lua` to match your SRS server. Each service has a primary and secondary frequency:
+Set frequencies in `config.local.lua` to match your SRS server. Each service has a primary and secondary frequency:
 
 ```lua
 FREQ_APPROACH   = 131000000   -- 131.000 MHz
@@ -356,7 +372,7 @@ The bot auto-detects GPU availability (`device="auto"` in faster-whisper). With 
 ## Troubleshooting
 
 **Bot shows wrong callsign / old airfield name**
-Your `.env` file may be overriding `config.lua`. Remove any `ATC_CALLSIGN`, `AIRPORT_ICAO`, or frequency entries from `.env` — these should only be in `config.lua`.
+Your `.env` file may be overriding `config.local.lua`. Remove any `ATC_CALLSIGN`, `AIRPORT_ICAO`, or frequency entries from `.env` — these should only be in `config.local.lua`.
 
 **No weather data**
 Check `%USERPROFILE%\Saved Games\DCS_Server Instance\Logs\atc_export.log`. If it shows `socket=false`, the DCS Lua socket library is not available. Ensure DCS is not in a restricted export mode.
@@ -370,7 +386,7 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 **Bot not responding on radio**
 - Confirm SRS server is running and the bot has connected (check `bot.log`)
 - Confirm Tacview real-time telemetry is enabled
-- Confirm frequencies in `config.lua` match the SRS frequencies you are transmitting on
+- Confirm frequencies in `config.local.lua` match the SRS frequencies you are transmitting on
 
 ---
 
@@ -378,7 +394,8 @@ Verify `piper/piper.exe` exists in the project root and the voice model is in `p
 
 | File | Purpose |
 |------|---------|
-| `config.lua.example` | Example configuration — copy to `config.lua` and edit for your airfield |
+| `config.lua` | Default configuration and airfield reference — do not edit, use `config.local.lua` for overrides |
+| `config.local.lua` | Your personal settings (gitignored) — overrides values in `config.lua` |
 | `dcs_atc_export.lua.example` | Example DCS hook — copy to `dcs_atc_export.lua` and install in DCS hooks folder |
 | `.env` | Secret keys (API keys, server addresses) — never committed to git |
 | `dcs_atc_export.lua` | DCS Lua hook — install to Saved Games/DCS_Server Instance/Scripts/Hooks/ |
