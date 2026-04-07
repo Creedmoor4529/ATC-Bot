@@ -45,6 +45,7 @@ from config import (
     FREQ_GROUND, FREQ_GROUND_2, FREQ_TOWER, FREQ_TOWER_2,
     FREQ_APPROACH, FREQ_APPROACH_2,
     BOT_LAT, BOT_LON, BOT_ALT,
+    ACTIVE_RUNWAY, AUTO_RUNWAY_SELECTION,
 )
 
 from config import LOG_LEVEL as _LOG_LEVEL
@@ -220,6 +221,9 @@ class ATCBot:
         asyncio.create_task(self._approach_conflict_monitor_loop())
         # Arrival sequence monitor — clears next aircraft when #1 lands
         asyncio.create_task(self._arrival_sequence_monitor_loop())
+        # Auto runway selection based on wind
+        if AUTO_RUNWAY_SELECTION:
+            asyncio.create_task(self._wind_runway_monitor_loop())
 
     async def stop(self):
         logger.info("Shutting down...")
@@ -265,6 +269,32 @@ class ATCBot:
                     logger.warning(f"Tacview reconnect failed: {e}")
                     # Ensure _running is False so we keep retrying
                     self.tacview._running = False
+
+    async def _wind_runway_monitor_loop(self):
+        """
+        Periodically evaluate wind direction and switch active runway to the
+        one with the best headwind component. The configured ACTIVE_RUNWAY is
+        used as the "preferred" runway when winds are calm.
+        """
+        # Wait for weather to stabilise after startup
+        await asyncio.sleep(45)
+        while True:
+            try:
+                if self.weather.is_alive:
+                    changed = self.state.update_runway_from_wind(
+                        wind_dir_mag=self.weather.wind_dir_mag,
+                        wind_speed_kts=self.weather.wind_speed_kts,
+                        preferred=ACTIVE_RUNWAY,
+                    )
+                    if changed:
+                        logger.info(
+                            f"Active runway changed to {self.state.active_runway.designator} "
+                            f"(wind {self.weather.wind_dir_mag:03.0f}°M at "
+                            f"{self.weather.wind_speed_kts:.0f}kts)"
+                        )
+            except Exception as e:
+                logger.debug(f"Wind runway monitor error: {e}")
+            await asyncio.sleep(60)
 
     async def _dcs_heartbeat_monitor_loop(self):
         """Log a warning when DCS stops sending export packets, and when it resumes."""

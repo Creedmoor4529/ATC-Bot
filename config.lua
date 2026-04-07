@@ -124,7 +124,13 @@ FREQ_GROUND_2   = 258000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 -- =========================================================================
 
 -- Active runway (auto: primary ILS runway from database)
+-- When AUTO_RUNWAY_SELECTION is true, this is treated as the preferred runway
+-- used during calm winds — the bot will switch to the reciprocal when wind favours it.
 ACTIVE_RUNWAY = "28"
+
+-- Automatically select the runway based on wind (headwind component).
+-- Set to false to pin the active runway to ACTIVE_RUNWAY at all times.
+AUTO_RUNWAY_SELECTION = true
 
 -- Magnetic variation in degrees east (auto: by map region)
 -- MAGNETIC_VAR = 4.5

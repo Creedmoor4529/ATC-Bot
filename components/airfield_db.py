@@ -1332,6 +1332,59 @@ def preferred_runway(icao: str) -> str | None:
     return ils[0][0] if ils else None
 
 
+def best_runway_for_wind(
+    preferred: str,
+    wind_dir_mag: float,
+    wind_speed_kts: float,
+    calm_threshold_kts: float = 3.0,
+) -> str:
+    """
+    Pick the best runway (preferred or its reciprocal) based on wind.
+
+    DCS reports wind as degrees FROM (meteorological convention). Runway numbers
+    are based on magnetic heading of the landing direction (e.g. runway 28 =
+    280° magnetic). Aircraft land INTO the wind, so the best runway is the one
+    whose heading is closest to the direction the wind is coming FROM.
+
+    The headwind component is wind_speed * cos(wind_from - runway_heading).
+    Positive = headwind, negative = tailwind. Pick the runway with the larger
+    headwind component.
+
+    Below calm_threshold_kts the wind is effectively calm and the preferred
+    runway is returned unchanged.
+    """
+    import math
+
+    if wind_speed_kts < calm_threshold_kts:
+        return preferred
+
+    # Parse the preferred runway to find its reciprocal
+    num_str = ""
+    suffix = ""
+    for ch in preferred:
+        if ch.isdigit():
+            num_str += ch
+        else:
+            suffix = ch
+            break
+    if not num_str:
+        return preferred
+    recip_num = (int(num_str) + 18) % 36
+    if recip_num == 0:
+        recip_num = 36
+    suffix_map = {"L": "R", "R": "L", "C": "C"}
+    recip_suffix = suffix_map.get(suffix.upper(), "")
+    reciprocal = f"{recip_num:02d}{recip_suffix}"
+
+    pref_hdg = runway_to_heading(preferred)
+    recip_hdg = runway_to_heading(reciprocal)
+
+    pref_headwind = wind_speed_kts * math.cos(math.radians(wind_dir_mag - pref_hdg))
+    recip_headwind = wind_speed_kts * math.cos(math.radians(wind_dir_mag - recip_hdg))
+
+    return preferred if pref_headwind >= recip_headwind else reciprocal
+
+
 def runway_to_heading(runway: str) -> int:
     """
     Convert a runway designator to its approximate magnetic inbound heading.

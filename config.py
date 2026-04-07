@@ -150,3 +150,7 @@ FREQ_GROUND     = _get("FREQ_GROUND",     "FREQ_GROUND",     121900000, float)
 FREQ_GROUND_2   = _get("FREQ_GROUND_2",   "FREQ_GROUND_2",   275800000, float)
 
 INSTRUCTIONS = _get("INSTRUCTIONS", "INSTRUCTIONS", "", str)
+
+# Automatic runway selection based on wind (favours the runway with the
+# strongest headwind component). Configured runway is used when wind is calm.
+AUTO_RUNWAY_SELECTION = _get("AUTO_RUNWAY_SELECTION", "AUTO_RUNWAY_SELECTION", True, bool)

@@ -23,7 +23,7 @@ from config import (
     FREQ_TOWER, MSA_FT, MAGNETIC_VAR,
     BOT_LAT, BOT_LON,
 )
-from airfield_db import _on_runway, navaid_summary, runway_to_heading, taxiway_lookup
+from airfield_db import _on_runway, navaid_summary, runway_to_heading, taxiway_lookup, best_runway_for_wind
 
 # Runway heading and its reciprocal — used for approach detection on either end
 _RWY_HEADING = runway_to_heading(ACTIVE_RUNWAY)
@@ -138,6 +138,28 @@ class ATCState:
 
     def set_active_runway(self, designator: str):
         self.active_runway = RunwayState(designator=designator)
+
+    def update_runway_from_wind(self, wind_dir_mag: float, wind_speed_kts: float, preferred: str) -> bool:
+        """
+        Pick the best runway for current wind and update active_runway if it
+        should change. Returns True if the runway was changed.
+
+        Will NOT change the runway when:
+          - An aircraft is on the runway (landing_callsign or line_up_callsign)
+          - An aircraft is in the arrival sequence (on final / in the pattern)
+          - An aircraft is in the departure queue
+        This prevents flipping the runway out from under an active approach.
+        """
+        best = best_runway_for_wind(preferred, wind_dir_mag, wind_speed_kts)
+        if best == self.active_runway.designator:
+            return False
+        # Hysteresis — never change runway while traffic depends on the current one
+        if self.active_runway.landing_callsign or self.active_runway.line_up_callsign:
+            return False
+        if self.arrival_sequence or self.departure_queue:
+            return False
+        self.set_active_runway(best)
+        return True
 
     def runway_clear(self) -> bool:
         return (
@@ -394,14 +416,15 @@ class ATCState:
                 "alt_ft":   round(ac.alt_ft),
                 "heading":  round(ac_hdg_mag),
                 "speed_kts": round(ac.speed_kts),
-                "runway":   ACTIVE_RUNWAY,
+                "runway":   self.active_runway.designator,
                 "type":     ac.name or "",
                 "pattern":  "overhead_break",
             }
 
         # Check alignment with either runway direction
-        for rwy_hdg, rwy_label in [(_RWY_HEADING, ACTIVE_RUNWAY),
-                                    (_RWY_RECIP, self._reciprocal_designator(ACTIVE_RUNWAY))]:
+        active = self.active_runway.designator
+        for rwy_hdg, rwy_label in [(_RWY_HEADING, active),
+                                    (_RWY_RECIP, self._reciprocal_designator(active))]:
             # Aircraft heading should match the runway heading (flying toward the field)
             if self._angle_diff(ac_hdg_mag, rwy_hdg) > 20:
                 continue
