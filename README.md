@@ -102,6 +102,7 @@ Create a file called `config.local.lua` in the project root with your airfield s
 
 ```lua
 AIRPORT_ICAO  = "LCRA"
+DCS_MAP       = "Syria"      -- DCS theatre name (see config.lua for valid values)
 ATC_CALLSIGN  = "Akrotiri"
 ACTIVE_RUNWAY = "28"
 FREQ_APPROACH   = 119000000
@@ -111,6 +112,8 @@ FREQ_TOWER_2    = 257500000
 FREQ_GROUND     = 118000000
 FREQ_GROUND_2   = 258000000
 ```
+
+> **`DCS_MAP` is required.** It must match the theatre your DCS server is running, and the chosen `AIRPORT_ICAO` must exist on that map. The bot will refuse to start with a clear error message if either is missing or mismatched. This disambiguates airfields that exist on multiple maps (e.g. Beirut OLBA appears on both Syria and Sinai). The `DCS_MAP` value next to each map header in [config.lua](config.lua) is the exact string to use.
 
 > **Important:** Do NOT edit `config.lua` directly — it is tracked by git and will cause merge conflicts on `git pull`. Put all your settings in `config.local.lua` instead. This file is gitignored and will never be overwritten by updates. Any value in `config.local.lua` overrides the same value in `config.lua`.
 
@@ -151,6 +154,7 @@ All operational settings are in `config.lua` (defaults) and `config.local.lua` (
 | Setting | Description |
 |---------|-------------|
 | `AIRPORT_ICAO` | ICAO code of your airfield (see reference list in config.lua) |
+| `DCS_MAP` | **Required.** DCS theatre name e.g. `"Syria"`, `"Caucasus"`, `"PersianGulf"` (see config.lua for full list) |
 | `ATC_CALLSIGN` | Base callsign e.g. `"ANAPA"` — bot appends APPROACH / TOWER / GROUND automatically |
 | `ACTIVE_RUNWAY` | Active runway designator e.g. `"22"` |
 | `MAGNETIC_VAR` | Magnetic variation in degrees east for your map |
