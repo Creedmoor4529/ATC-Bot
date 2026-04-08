@@ -107,6 +107,16 @@
 AIRPORT_ICAO  = "LCRA"      -- ICAO code from the list above
 ATC_CALLSIGN  = "Akrotiri"  -- Callsign used on SRS and in ATC responses
 
+-- DCS theatre. Required: validates that AIRPORT_ICAO is actually present on
+-- the map you're flying, and disambiguates airfields that exist on multiple
+-- maps (e.g. Beirut OLBA, Damascus OSDI, Ramat David LLRD).
+-- Valid values:
+--   Afghanistan          Caucasus            GermanyCW           Iraq
+--   Kola                 MarianaIslands      MarianaIslandsWWII  Nevada
+--   Normandy             PersianGulf         SinaiMap            SouthAtlantic
+--   Syria                TheChannel
+DCS_MAP = "Syria"
+
 -- Radio frequencies in Hz. Set all six values for your airfield.
 -- Approach/Tower/Ground can share a frequency — pilots only need one to tune.
 -- _2 frequencies are secondary (UHF military band). Set to 0 to disable.

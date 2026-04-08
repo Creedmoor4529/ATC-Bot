@@ -5,11 +5,15 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "components"))
 from airfield_db import (
+    MAP_AIRFIELDS as _MAP_AIRFIELDS,
+    airfields_on_map as _airfields_on_map,
     lookup as _airfield_lookup,
     mag_var_lookup as _mag_var_lookup,
+    maps_for_airfield as _maps_for_airfield,
     preferred_runway as _preferred_runway,
     runway_to_heading as _runway_to_heading,
     tacan_lookup as _tacan_lookup,
+    validate_airfield as _validate_airfield,
 )
 
 load_dotenv()
@@ -119,6 +123,36 @@ DCS_CHAT_HOST    = os.getenv("DCS_CHAT_HOST", os.getenv("TACVIEW_HOST", "127.0.0
 
 ATC_CALLSIGN  = _get("ATC_CALLSIGN", "ATC_CALLSIGN", "ANAPA APPROACH", str)
 AIRPORT_ICAO  = _get("AIRPORT_ICAO",  "AIRPORT_ICAO",  "URKA",          str)
+
+# DCS theatre name (matches the JSON filenames produced by the runway extractor
+# hook). Required — used to disambiguate airfields that exist on multiple maps
+# (Beirut, Ramat David, Damascus, etc.) and to validate the AIRPORT_ICAO choice.
+# Valid values: Afghanistan, Caucasus, GermanyCW, Iraq, Kola, MarianaIslands,
+# MarianaIslandsWWII, Nevada, Normandy, PersianGulf, SinaiMap, SouthAtlantic,
+# Syria, TheChannel
+DCS_MAP = _get("DCS_MAP", "DCS_MAP", "", str)
+if not DCS_MAP:
+    raise SystemExit(
+        "config error: DCS_MAP is not set. Add `DCS_MAP = \"<map>\"` to "
+        "config.local.lua. Valid maps: " + ", ".join(sorted(_MAP_AIRFIELDS))
+    )
+if DCS_MAP not in _MAP_AIRFIELDS:
+    raise SystemExit(
+        f"config error: DCS_MAP=\"{DCS_MAP}\" is not recognised. Valid maps: "
+        + ", ".join(sorted(_MAP_AIRFIELDS))
+    )
+if not _validate_airfield(DCS_MAP, AIRPORT_ICAO):
+    other_maps = _maps_for_airfield(AIRPORT_ICAO)
+    hint = (
+        f" — {AIRPORT_ICAO} is on map(s): {', '.join(other_maps)}"
+        if other_maps else ""
+    )
+    raise SystemExit(
+        f"config error: AIRPORT_ICAO=\"{AIRPORT_ICAO}\" is not present on "
+        f"DCS_MAP=\"{DCS_MAP}\"{hint}. "
+        f"Airfields on {DCS_MAP}: {', '.join(_airfields_on_map(DCS_MAP))}"
+    )
+
 ACTIVE_RUNWAY = _get("ACTIVE_RUNWAY", "ACTIVE_RUNWAY",
                      _preferred_runway(AIRPORT_ICAO) or "28", str)
 MAGNETIC_VAR  = _get("MAGNETIC_VAR",  "MAGNETIC_VAR",

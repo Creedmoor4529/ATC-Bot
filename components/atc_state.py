@@ -18,7 +18,7 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 from config import (
-    AIRPORT_ICAO, ACTIVE_RUNWAY,
+    AIRPORT_ICAO, ACTIVE_RUNWAY, DCS_MAP,
     TACAN_CHANNEL, TACAN_INBOUND_COURSE, TACAN_MDA_FT, AIRPORT_ELEVATION_FT,
     FREQ_TOWER, MSA_FT, MAGNETIC_VAR,
     BOT_LAT, BOT_LON,
@@ -207,7 +207,7 @@ class ATCState:
                     break
 
             # Check runway occupancy — ignore stationary aircraft not in our strips
-            if _on_runway(ac.lat, ac.lon, ac.alt_ft, AIRPORT_ELEVATION_FT, self.airport_icao):
+            if _on_runway(ac.lat, ac.lon, ac.alt_ft, AIRPORT_ELEVATION_FT, self.airport_icao, DCS_MAP):
                 is_known = any(cs in label or label in cs for cs in self.strips)
                 if is_known or ac.speed_kts > 5:
                     on_rwy.append(label)

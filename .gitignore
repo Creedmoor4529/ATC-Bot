@@ -18,6 +18,9 @@ AIRFIELD_NAVAIDS.txt
 config.local.lua
 dcs_atc_export.lua
 
+# One-shot DCS runway extractor hook — kept locally for re-running on map updates
+dcs_runway_extractor.lua
+
 # Generated launcher
 start.sh
 
