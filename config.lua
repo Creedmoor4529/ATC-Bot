@@ -17,6 +17,483 @@
 -- =========================================================================
 -- AIRFIELD REFERENCE — set AIRPORT_ICAO to any code below.
 -- Coordinates and elevation are auto-resolved from the lookup table.
+-- The DCS_MAP setting (further down) must match the map column.
+-- =========================================================================
+--
+-- CAUCASUS    (DCS_MAP = "Caucasus")
+--   UGKG   Gudauta                    UGKO   Kutaisi
+--   UGKS   Kobuleti                   UGSB   Batumi
+--   UGSN   Senaki-Kolkhi              UGSS   Sukhumi-Babushara
+--   UGTB   Tbilisi-Lochini            UGTS   Soganlug
+--   UGTV   Vaziani                    URKA   Anapa-Vityazevo
+--   URKG   Krymsk                     URKH   Maykop-Khanskaya
+--   URKK   Krasnodar-Pashkovsky       URKN   Nalchik
+--   URKN2  Novorossiysk               URMG   Gelendzhik
+--   URMM   Mineralnye Vody            URMO   Beslan
+--   URMZ   Mozdok                     URRR   Krasnodar-Center
+--   URSS   Sochi-Adler
+--
+-- PERSIAN GULF    (DCS_MAP = "PersianGulf")
+--   OIBA   Abu Musa Island            OIBK   Kish Intl
+--   OIBL   Bandar Lengeh              OIBP   Lavan Island
+--   OIBS   Sirri Island               OIBT   Tunb Island AFB
+--   OIBTK  Tunb Kochak                OIKB   Bandar Abbas Intl
+--   OIKJ   Jiroft                     OIKK   Kerman
+--   OIKP   Havadarya                  OIKQ   Qeshm Island
+--   OISL   Lar                        OISS   Shiraz Intl
+--   OIZJ   Bandar-e-Jask              OMAA   Abu Dhabi Intl
+--   OMAB   Al-Bateen                  OMAD   Al Dhafra AFB
+--   OMAL   Al Ain Intl                OMAW   Liwa AFB
+--   OMDB   Dubai Intl                 OMDM   Al Minhad AFB
+--   OMDW   Al Maktoum Intl            OMFJ   Fujairah Intl
+--   OMQS   Quasoura_airport           OMRK   Ras Al Khaimah Intl
+--   OMSA   Sir Abu Nuayr              OMSJ   Sharjah Intl
+--   OMSN   Sas Al Nakheel             OOKB   Khasab
+--
+-- SYRIA / LEBANON / ISRAEL / TURKEY / JORDAN    (DCS_MAP = "Syria")
+--   LCEN   Ercan                      LCGK   Gecitkale
+--   LCLK   Larnaca                    LCLT   Lakatamia
+--   LCNC   Nicosia                    LCPH   Paphos
+--   LCPN   Pinarbashi                 LCRA   Akrotiri
+--   LCRA2  Kingsfield                 LLBG   Ben Gurion
+--   LLES   Eyn Shemer                 LLHA   Haifa
+--   LLHS   Hatzor                     LLHZ   Herzliya
+--   LLIB   Rosh Pina                  LLKS   Kiryat Shmona
+--   LLMG   Megiddo                    LLPM   Palmachim
+--   LLRD   Ramat David                LLTN   Tel Nof
+--   LTAF   Adana Sakirpasa            LTAG   Incirlik
+--   LTAJ   Gaziantep                  LTCH   Sanliurfa
+--   LTDA   Hatay                      LTFG   Gazipasa
+--   OJAM   King Abdullah II           OJAM2  Marka
+--   OJH3   H3                         OJH3NW H3 Northwest
+--   OJH3SW H3 Southwest               OJH4   H4
+--   OJMA   King Hussein Air College   OJMF   Muwaffaq Salti
+--   OJPH   Prince Hassan              OJRW   Ruwayshid
+--   OJTH   Tha'lah                    OLBA   Beirut-Rafic Hariri
+--   OLKA   Rene Mouawad               OLRA   Rayak
+--   OLWH   Wujah Al Hajar             OSABD  Abu al-Duhur
+--   OSAN   An Nasiriyah               OSAP   Aleppo
+--   OSDI   Damascus                   OSDR   Al-Dumayr
+--   OSDZ   Deir ez-Zor                OSHM   Hama
+--   OSJI   Jirah                      OSKH   Khalkhalah
+--   OSKW   Kuweires                   OSLK   Bassel Al-Assad
+--   OSMN   Minakh                     OSMR   Marj Ruhayyil
+--   OSMS1  Marj as Sultan North       OSMS2  Marj as Sultan South
+--   OSMZ   Mezzeh                     OSPR   Palmyra
+--   OSQS   Al Qusayr                  OSQS2  Qabr as Sitt
+--   OSSH   Shayrat                    OSSQ   Sayqal
+--   OSTB   Tabqa                      OSTF   Taftanaz
+--   OSTI   Tiyas                      OSTS   Tal Siman
+--
+-- NEVADA (NTTR)    (DCS_MAP = "Nevada")
+--   K0L7   Jean                       K0L9   Echo Bay
+--   K1L1   Lincoln County             K3Q0   Mina
+--   K67L   Mesquite                   KBTY   Beatty
+--   KBVU   Boulder City               KHND   Henderson Executive
+--   KIFP   Laughlin                   KINS   Creech
+--   KLAS   McCarran International     KLSV   Nellis
+--   KPMS   Pahute Mesa                KTNX   Tonopah Test Range
+--   KTPH   Tonopah                    KVGT   North Las Vegas
+--   KXTA   Groom Lake
+--
+-- MARIANA ISLANDS    (DCS_MAP = "MarianaIslands")
+--   PGFT   Tinian Intl                PGOR   Olf Orote
+--   PGPG   Pagan Airstrip             PGRO   Rota Intl
+--   PGSN   Saipan Intl                PGUA   Andersen AFB
+--   PGUM   Antonio B. Won Pat Intl
+--
+-- MARIANA ISLANDS WWII    (DCS_MAP = "MarianaIslandsWWII")
+--   WAF3   Airfield 3                 WAGN   Agana
+--   WCKA   Charon Kanoa               WGRG   Gurguan Point
+--   WISL   Isley                      WKAG   Kagman
+--   WMRP   Marpi                      WORO   Orote
+--   WPAG   Pagan                      WROT   Rota
+--   WUSH   Ushi
+--
+-- NORMANDY    (DCS_MAP = "Normandy")
+--   LFOE   Evreux-Fauville            LFOH   Le Havre-Octeville
+--   LFPB   Paris Le Bourget           LFPG   Paris Charles de Gaulle
+--   LFQA   Laon-Couvron               LFQB   Troyes-Barberey
+--   LFRC   Cherbourg-Maupertus        LFRK   Caen-Carpiquet
+--
+-- THE CHANNEL    (DCS_MAP = "TheChannel")
+--   EGKB   Biggin Hill                EGLF   Farnborough
+--   EGMC   Southend                   EGMH   Manston
+--   LFAK   Denain-Prouvy              LFAY   Amiens-Glisy
+--   LFQQ   Lille-Lesquin
+--
+-- SOUTH ATLANTIC    (DCS_MAP = "SouthAtlantic")
+--   EGYP   Mount Pleasant (Port Sta.  SAVT   Ushuaia Malvinas
+--   SAWE   Rio Grande                 SAWG   Rio Gallegos
+--
+-- SINAI    (DCS_MAP = "SinaiMap")
+--   HEAR   El Arish                   HEAS   Abu Suwayr
+--   HEAU   Abu Rudeis                 HEBA   Borg El Arab Internation.
+--   HEBH   Al Bahr al Ahmar           HEBL   Bilbeis Air Base
+--   HEBN   Beni Suef                  HEBR   Birma Air Base
+--   HEBZ   Baluza                     HECA   Cairo International Airp.
+--   HECW   Cairo West                 HEDS   Difarsuwar Airfield
+--   HEFD   Fayed                      HEGB   Gebel El Basur Air Base
+--   HEGN   Hurghada International A.  HEGR   El Gora
+--   HEIN   Inshas Airbase             HEIS   Al Ismailiyah
+--   HEJK   Jiyanklis Air Base         HEKB   Kibrit Air Base
+--   HEKH   Al Khatatbah               HEKW   Kom Awshim
+--   HEMN   El Minya                   HEMS   Al Mansurah
+--   HEMZ   Melez                      HEQS   Quwaysina
+--   HERM   Al Rahmaniyah Air Base     HESC   St Catherine
+--   HESH   Sharm El Sheikh Internat.  HESL   As Salihiyah
+--   HETB   Bir Hasanah                HETB2  Taba International Airpo.
+--   HEWJ   Wadi al Jandali            HEWR   Wadi Abu Rish
+--   HEZQ   AzZaqaziq                  LLBG   Ben Gurion
+--   LLER   Ramon International Airp.  LLES   Eyn Shemer
+--   LLHB   Hatzerim                   LLHS   Hatzor
+--   LLKM   Kedem                      LLMG   Megiddo
+--   LLNV   Nevatim                    LLOV   Ovda
+--   LLPM   Palmachim                  LLRD   Ramat David
+--   LLRM   Ramon Airbase              LLSD   Sde Dov
+--   LLTN   Tel Nof                    OEKF   King Feisal Air Base
+--   OETB   Tabuk                      OLBA   Beirut-Rafic Hariri
+--   OSDI   Damascus                   OSKH   Khalkhalah
+--   OSMZ   Mezzeh
+--
+-- AFGHANISTAN    (DCS_MAP = "Afghanistan")
+--   OABM   Bamyan                     OABN   Camp Bastion
+--   OABT   Bost                       OACC   Chaghcharan
+--   OADR   Dwyer                      OAFR   Farah
+--   OAFS   FOB Salerno                OAGZ   Gardez
+--   OAHR   Herat                      OAIX   Bagram
+--   OAJL   Jalalabad                  OAKB   Kabul
+--   OAKN   Kandahar                   OAKT   Khost
+--   OAMN   Maymana Zahiraddin Farya.  OAQN   Qala i Naw
+--   OASA   Sharana                    OASD   Shindand
+--   OATN   Tarinkot                   OAZJ   Nimroz
+--
+-- KOLA    (DCS_MAP = "Kola")
+--   EFET   Enontekio                  EFHS   Hosio
+--   EFIV   Ivalo                      EFKE   Kemi Tornio
+--   EFKS   Kuusamo                    EFKT   Kittila
+--   EFRO   Rovaniemi                  EFSO   Sodankyla
+--   EFVU   Vuojarvi                   ENAN   Andoya
+--   ENAT   Alta                       ENBO   Bodo
+--   ENDU   Bardufoss                  ENEV   Evenes
+--   ENKR   Kirkenes                   ENNA   Banak
+--   ESNJ   Jokkmokk                   ESNQ   Kiruna
+--   ESNX   Arvidsjaur                 ESPA   Kallax
+--   ESPB   Boden Heli Base            ESPE   Vidsel
+--   ESUK   Kalixfors                  ESUT   Hemavan
+--   ULAF   Afrikanda                  ULAM   Severomorsk-3
+--   ULAS   Severomorsk-1              ULKK   Murmansk International
+--   ULKL   Kalevala                   ULKY   Koshka Yavr
+--   ULMA   Alakurtti                  ULMK   Monchegorsk
+--   ULMK2  Kilpyavr                   ULMP   Luostari Pechenga
+--   ULPD   Poduzhemye                 ULWC   Olenya
+--
+-- IRAQ    (DCS_MAP = "Iraq")
+--   ORAA   Al-Asad Airbase            ORAK   Al-Kut Airport
+--   ORAS   Al-Salam Airbase           ORAT   Al-Taquddum Airport
+--   ORBD   Balad Airbase              ORBI   Baghdad International Ai.
+--   ORBM   Mosul International Airp.  ORBP   Bashur Airport
+--   ORER   Erbil International Airp.  ORH2   H-2 Airbase
+--   ORH3   H-3 Main Airbase           ORH3NW H-3 Northwest Airbase
+--   ORH3SW H-3 Southwest Airbase      ORK1   K1 Base
+--   ORKK   Kirkuk International Air.  ORQW   Qayyarah Airfield West
+--   ORSU   Sulaimaniyah Internation.  ORTI   Al-Taji Airport
+--   ORTL   Al-Sahra Airport
+--
+-- GERMANY (COLD WAR)    (DCS_MAP = "GermanyCW")
+--   EDAB   Brandis                    EDAC   Kothen
+--   EDAD   Dessau                     EDAM   Merseburg
+--   EDAS   Leipzig Mockau             EDAV   Finow
+--   EDAY   Dedelow                    EDBA   Allstedt
+--   EDBC   Cochstedt                  EDBH   Barth
+--   EDBM   Waren Vielist              EDBN   Neubrandenburg
+--   EDCG   Garz                       EDCN   Pinnow
+--   EDCP   Peenemunde                 EDCT   Tutow
+--   EDCW   Wismar                     EDDB   Schonefeld
+--   EDDE   Bindersleben               EDDF   Frankfurt
+--   EDDH   Hamburg                    EDDI   Tempelhof
+--   EDDK   Cologne                    EDDL   Dusseldorf
+--   EDDP   Schkeuditz                 EDDT   Tegel
+--   EDDV   Hannover                   EDDW   Bremen
+--   EDFB   Fulda                      EDFG   Gelnhausen
+--   EDFH   Hahn                       EDFS   Schweinfurt
+--   EDFV   Sprendlingen               EDFZ   Mainz Finthen
+--   EDGA   Adelsheim                  EDGH   Hasselfelde
+--   EDGM   Gross Mohrdorf             EDGW   Grosse Wiese
+--   EDHA   Haina                      EDHE   Uetersen
+--   EDHG   Luneburg                   EDHI   Hamburg Finkenwerder
+--   EDHK   Kiel                       EDHL   Lubeck
+--   EDIE   Heidelberg                 EDLD   Landstuhl
+--   EDLG   Glindbruchkippe            EDOA   Larz
+--   EDOG   Gardelegen                 EDOI   Bienenfarm
+--   EDOJ   Sperenberg                 EDOL   Altes Lager
+--   EDOP   Parchim                    EDOS   Obermehler Schlotheim
+--   EDOV   Stendal                    EDOW   Perwenitz
+--   EDOX   Verden-Scharnhorst         EDQG   Giebelstadt
+--   EDRZ   Zweibrucken                EDTH   Thurland
+--   EDUB   Brand                      EDUE   Falkenberg
+--   EDUG   Gatow                      EDUH   Marxwalde
+--   EDUK   Kammermark                 EDUM   Ummern
+--   EDUO   Oranienburg                EDUT   Templin
+--   EDUW   Werneuchen                 EDUZ   Zerbst
+--   EDVE   Braunschweig               EDVM   Hildesheim
+--   EDVN   Northeim                   EDVR   Rinteln
+--   EDVU   Uelzen                     EDXJ   Sittensen
+--   EDXW   Weser Wumme                EKCH   Kastrup
+--   EKRN   Bornholm                   EPCJ   Chojna
+--   EPSC   Szczecin-Goleniow          ESMS   Sturup
+--   ESMT   Tagra                      ESMV   Revinge
+--   ETAB   Bitburg                    ETAD   Spangdahlem
+--   ETAR   Ramstein                   ETHB   Buckeburg
+--   ETHC   Celle                      ETHF   Fritzlar
+--   ETHM   Mahlwinkel                 ETHM2  Mendig
+--   ETHN   Neuruppin                  ETHS   Fassberg
+--   ETMD   Damgarten                  ETMN   Nordholz
+--   ETNL   Laage                      ETNN   Norvenich
+--   ETNW   Wunstorf                   ETOB   Briest
+--   ETOU   Wiesbaden                  ETSB   Buchel
+--   ETSH   Holzdorf                   ETSP   Pferdsfeld
+--   ETSW   Wittstock                  ETUO   Gutersloh
+--   ETUS   Sembach
+--
+-- =========================================================================
+--
+-- CAUCASUS    (DCS_MAP = "Caucasus")
+--   UGKG   Gudauta                   UGKO   Kutaisi
+--   UGKS   Kobuleti                  UGSB   Batumi
+--   UGSN   Senaki-Kolkhi             UGSS   Sukhumi-Babushara
+--   UGTB   Tbilisi-Lochini           UGTS   Soganlug
+--   UGTV   Vaziani                   URKA   Anapa-Vityazevo
+--   URKG   Krymsk                    URKH   Maykop-Khanskaya
+--   URKK   Krasnodar-Pashkovsky      URKN   Nalchik
+--   URKN2  Novorossiysk              URMG   Gelendzhik
+--   URMM   Mineralnye Vody           URMO   Beslan
+--   URMZ   Mozdok                    URRR   Krasnodar-Center
+--   URSS   Sochi-Adler
+--
+-- PERSIAN GULF    (DCS_MAP = "PersianGulf")
+--   OIBA   Abu Musa Island           OIBK   Kish Intl
+--   OIBL   Bandar Lengeh             OIBP   Lavan Island
+--   OIBS   Sirri Island              OIBT   Tunb Island AFB
+--   OIBTK  Tunb Kochak               OIKB   Bandar Abbas Intl
+--   OIKJ   Jiroft                    OIKK   Kerman
+--   OIKP   Havadarya                 OIKQ   Qeshm Island
+--   OISL   Lar                       OISS   Shiraz Intl
+--   OIZJ   Bandar-e-Jask             OMAA   Abu Dhabi Intl
+--   OMAB   Al-Bateen                 OMAD   Al Dhafra AFB
+--   OMAL   Al Ain Intl               OMAW   Liwa AFB
+--   OMDB   Dubai Intl                OMDM   Al Minhad AFB
+--   OMDW   Al Maktoum Intl           OMFJ   Fujairah Intl
+--   OMQS   Quasoura_airport          OMRK   Ras Al Khaimah Intl
+--   OMSA   Sir Abu Nuayr             OMSJ   Sharjah Intl
+--   OMSN   Sas Al Nakheel            OOKB   Khasab
+--
+-- SYRIA / LEBANON / ISRAEL / TURKEY / JORDAN    (DCS_MAP = "Syria")
+--   LCEN   Ercan                     LCGK   Gecitkale
+--   LCLK   Larnaca                   LCLT   Lakatamia
+--   LCNC   Nicosia                   LCPH   Paphos
+--   LCPN   Pinarbashi                LCRA   Akrotiri
+--   LCRA2  Kingsfield                LLBG   Ben Gurion
+--   LLES   Eyn Shemer                LLHA   Haifa
+--   LLHS   Hatzor                    LLHZ   Herzliya
+--   LLIB   Rosh Pina                 LLKS   Kiryat Shmona
+--   LLMG   Megiddo                   LLPM   Palmachim
+--   LLRD   Ramat David               LLTN   Tel Nof
+--   LTAF   Adana Sakirpasa           LTAG   Incirlik
+--   LTAJ   Gaziantep                 LTCH   Sanliurfa
+--   LTDA   Hatay                     LTFG   Gazipasa
+--   OJAM   King Abdullah II          OJAM2  Marka
+--   OJH3   H3                        OJH3NW H3 Northwest
+--   OJH3SW H3 Southwest              OJH4   H4
+--   OJMA   King Hussein Air College  OJMF   Muwaffaq Salti
+--   OJPH   Prince Hassan             OJRW   Ruwayshid
+--   OJTH   Tha'lah                   OLBA   Beirut-Rafic Hariri
+--   OLKA   Rene Mouawad              OLRA   Rayak
+--   OLWH   Wujah Al Hajar            OSABD  Abu al-Duhur
+--   OSAN   An Nasiriyah              OSAP   Aleppo
+--   OSDI   Damascus                  OSDR   Al-Dumayr
+--   OSDZ   Deir ez-Zor               OSHM   Hama
+--   OSJI   Jirah                     OSKH   Khalkhalah
+--   OSKW   Kuweires                  OSLK   Bassel Al-Assad
+--   OSMN   Minakh                    OSMR   Marj Ruhayyil
+--   OSMS1  Marj as Sultan North      OSMS2  Marj as Sultan South
+--   OSMZ   Mezzeh                    OSPR   Palmyra
+--   OSQS   Al Qusayr                 OSQS2  Qabr as Sitt
+--   OSSH   Shayrat                   OSSQ   Sayqal
+--   OSTB   Tabqa                     OSTF   Taftanaz
+--   OSTI   Tiyas                     OSTS   Tal Siman
+--
+-- NEVADA (NTTR)    (DCS_MAP = "Nevada")
+--   K0L7   Jean                      K0L9   Echo Bay
+--   K1L1   Lincoln County            K3Q0   Mina
+--   K67L   Mesquite                  KBTY   Beatty
+--   KBVU   Boulder City              KHND   Henderson Executive
+--   KIFP   Laughlin                  KINS   Creech
+--   KLAS   McCarran International    KLSV   Nellis
+--   KPMS   Pahute Mesa               KTNX   Tonopah Test Range
+--   KTPH   Tonopah                   KVGT   North Las Vegas
+--   KXTA   Groom Lake
+--
+-- MARIANA ISLANDS    (DCS_MAP = "MarianaIslands")
+--   PGFT   Tinian Intl               PGOR   Olf Orote
+--   PGPG   Pagan Airstrip            PGRO   Rota Intl
+--   PGSN   Saipan Intl               PGUA   Andersen AFB
+--   PGUM   Antonio B. Won Pat Intl
+--
+-- MARIANA ISLANDS WWII    (DCS_MAP = "MarianaIslandsWWII")
+--   WAF3   Airfield 3                WAGN   Agana
+--   WCKA   Charon Kanoa              WGRG   Gurguan Point
+--   WISL   Isley                     WKAG   Kagman
+--   WMRP   Marpi                     WORO   Orote
+--   WPAG   Pagan                     WROT   Rota
+--   WUSH   Ushi
+--
+-- NORMANDY    (DCS_MAP = "Normandy")
+--   LFOE   Evreux-Fauville           LFOH   Le Havre-Octeville
+--   LFPB   Paris Le Bourget          LFPG   Paris Charles de Gaulle
+--   LFQA   Laon-Couvron              LFQB   Troyes-Barberey
+--   LFRC   Cherbourg-Maupertus       LFRK   Caen-Carpiquet
+--
+-- THE CHANNEL    (DCS_MAP = "TheChannel")
+--   EGKB   Biggin Hill               EGLF   Farnborough
+--   EGMC   Southend                  EGMH   Manston
+--   LFAK   Denain-Prouvy             LFAY   Amiens-Glisy
+--   LFQQ   Lille-Lesquin
+--
+-- SOUTH ATLANTIC    (DCS_MAP = "SouthAtlantic")
+--   EGYP   Mount Pleasant (Port Stan.SAVT   Ushuaia Malvinas
+--   SAWE   Rio Grande                SAWG   Rio Gallegos
+--
+-- SINAI    (DCS_MAP = "SinaiMap")
+--   HEAR   El Arish                  HEAS   Abu Suwayr
+--   HEAU   Abu Rudeis                HEBA   Borg El Arab Internationa.
+--   HEBH   Al Bahr al Ahmar          HEBL   Bilbeis Air Base
+--   HEBN   Beni Suef                 HEBR   Birma Air Base
+--   HEBZ   Baluza                    HECA   Cairo International Airpo.
+--   HECW   Cairo West                HEDS   Difarsuwar Airfield
+--   HEFD   Fayed                     HEGB   Gebel El Basur Air Base
+--   HEGN   Hurghada International Ai.HEGR   El Gora
+--   HEIN   Inshas Airbase            HEIS   Al Ismailiyah
+--   HEJK   Jiyanklis Air Base        HEKB   Kibrit Air Base
+--   HEKH   Al Khatatbah              HEKW   Kom Awshim
+--   HEMN   El Minya                  HEMS   Al Mansurah
+--   HEMZ   Melez                     HEQS   Quwaysina
+--   HERM   Al Rahmaniyah Air Base    HESC   St Catherine
+--   HESH   Sharm El Sheikh Internati.HESL   As Salihiyah
+--   HETB   Bir Hasanah               HETB2  Taba International Airport
+--   HEWJ   Wadi al Jandali           HEWR   Wadi Abu Rish
+--   HEZQ   AzZaqaziq                 LLBG   Ben Gurion
+--   LLER   Ramon International Airpo.LLES   Eyn Shemer
+--   LLHB   Hatzerim                  LLHS   Hatzor
+--   LLKM   Kedem                     LLMG   Megiddo
+--   LLNV   Nevatim                   LLOV   Ovda
+--   LLPM   Palmachim                 LLRD   Ramat David
+--   LLRM   Ramon Airbase             LLSD   Sde Dov
+--   LLTN   Tel Nof                   OEKF   King Feisal Air Base
+--   OETB   Tabuk                     OLBA   Beirut-Rafic Hariri
+--   OSDI   Damascus                  OSKH   Khalkhalah
+--   OSMZ   Mezzeh
+--
+-- AFGHANISTAN    (DCS_MAP = "Afghanistan")
+--   OABM   Bamyan                    OABN   Camp Bastion
+--   OABT   Bost                      OACC   Chaghcharan
+--   OADR   Dwyer                     OAFR   Farah
+--   OAFS   FOB Salerno               OAGZ   Gardez
+--   OAHR   Herat                     OAIX   Bagram
+--   OAJL   Jalalabad                 OAKB   Kabul
+--   OAKN   Kandahar                  OAKT   Khost
+--   OAMN   Maymana Zahiraddin FaryabiOAQN   Qala i Naw
+--   OASA   Sharana                   OASD   Shindand
+--   OATN   Tarinkot                  OAZJ   Nimroz
+--
+-- KOLA    (DCS_MAP = "Kola")
+--   EFET   Enontekio                 EFHS   Hosio
+--   EFIV   Ivalo                     EFKE   Kemi Tornio
+--   EFKS   Kuusamo                   EFKT   Kittila
+--   EFRO   Rovaniemi                 EFSO   Sodankyla
+--   EFVU   Vuojarvi                  ENAN   Andoya
+--   ENAT   Alta                      ENBO   Bodo
+--   ENDU   Bardufoss                 ENEV   Evenes
+--   ENKR   Kirkenes                  ENNA   Banak
+--   ESNJ   Jokkmokk                  ESNQ   Kiruna
+--   ESNX   Arvidsjaur                ESPA   Kallax
+--   ESPB   Boden Heli Base           ESPE   Vidsel
+--   ESUK   Kalixfors                 ESUT   Hemavan
+--   ULAF   Afrikanda                 ULAM   Severomorsk-3
+--   ULAS   Severomorsk-1             ULKK   Murmansk International
+--   ULKL   Kalevala                  ULKY   Koshka Yavr
+--   ULMA   Alakurtti                 ULMK   Monchegorsk
+--   ULMK2  Kilpyavr                  ULMP   Luostari Pechenga
+--   ULPD   Poduzhemye                ULWC   Olenya
+--
+-- IRAQ    (DCS_MAP = "Iraq")
+--   ORAA   Al-Asad Airbase           ORAK   Al-Kut Airport
+--   ORAS   Al-Salam Airbase          ORAT   Al-Taquddum Airport
+--   ORBD   Balad Airbase             ORBI   Baghdad International Air.
+--   ORBM   Mosul International Airpo.ORBP   Bashur Airport
+--   ORER   Erbil International Airpo.ORH2   H-2 Airbase
+--   ORH3   H-3 Main Airbase          ORH3NW H-3 Northwest Airbase
+--   ORH3SW H-3 Southwest Airbase     ORK1   K1 Base
+--   ORKK   Kirkuk International Airp.ORQW   Qayyarah Airfield West
+--   ORSU   Sulaimaniyah Internationa.ORTI   Al-Taji Airport
+--   ORTL   Al-Sahra Airport
+--
+-- GERMANY (COLD WAR)    (DCS_MAP = "GermanyCW")
+--   EDAB   Brandis                   EDAC   Kothen
+--   EDAD   Dessau                    EDAM   Merseburg
+--   EDAS   Leipzig Mockau            EDAV   Finow
+--   EDAY   Dedelow                   EDBA   Allstedt
+--   EDBC   Cochstedt                 EDBH   Barth
+--   EDBM   Waren Vielist             EDBN   Neubrandenburg
+--   EDCG   Garz                      EDCN   Pinnow
+--   EDCP   Peenemunde                EDCT   Tutow
+--   EDCW   Wismar                    EDDB   Schonefeld
+--   EDDE   Bindersleben              EDDF   Frankfurt
+--   EDDH   Hamburg                   EDDI   Tempelhof
+--   EDDK   Cologne                   EDDL   Dusseldorf
+--   EDDP   Schkeuditz                EDDT   Tegel
+--   EDDV   Hannover                  EDDW   Bremen
+--   EDFB   Fulda                     EDFG   Gelnhausen
+--   EDFH   Hahn                      EDFS   Schweinfurt
+--   EDFV   Sprendlingen              EDFZ   Mainz Finthen
+--   EDGA   Adelsheim                 EDGH   Hasselfelde
+--   EDGM   Gross Mohrdorf            EDGW   Grosse Wiese
+--   EDHA   Haina                     EDHE   Uetersen
+--   EDHG   Luneburg                  EDHI   Hamburg Finkenwerder
+--   EDHK   Kiel                      EDHL   Lubeck
+--   EDIE   Heidelberg                EDLD   Landstuhl
+--   EDLG   Glindbruchkippe           EDOA   Larz
+--   EDOG   Gardelegen                EDOI   Bienenfarm
+--   EDOJ   Sperenberg                EDOL   Altes Lager
+--   EDOP   Parchim                   EDOS   Obermehler Schlotheim
+--   EDOV   Stendal                   EDOW   Perwenitz
+--   EDOX   Verden-Scharnhorst        EDQG   Giebelstadt
+--   EDRZ   Zweibrucken               EDTH   Thurland
+--   EDUB   Brand                     EDUE   Falkenberg
+--   EDUG   Gatow                     EDUH   Marxwalde
+--   EDUK   Kammermark                EDUM   Ummern
+--   EDUO   Oranienburg               EDUT   Templin
+--   EDUW   Werneuchen                EDUZ   Zerbst
+--   EDVE   Braunschweig              EDVM   Hildesheim
+--   EDVN   Northeim                  EDVR   Rinteln
+--   EDVU   Uelzen                    EDXJ   Sittensen
+--   EDXW   Weser Wumme               EKCH   Kastrup
+--   EKRN   Bornholm                  EPCJ   Chojna
+--   EPSC   Szczecin-Goleniow         ESMS   Sturup
+--   ESMT   Tagra                     ESMV   Revinge
+--   ETAB   Bitburg                   ETAD   Spangdahlem
+--   ETAR   Ramstein                  ETHB   Buckeburg
+--   ETHC   Celle                     ETHF   Fritzlar
+--   ETHM   Mahlwinkel                ETHM2  Mendig
+--   ETHN   Neuruppin                 ETHS   Fassberg
+--   ETMD   Damgarten                 ETMN   Nordholz
+--   ETNL   Laage                     ETNN   Norvenich
+--   ETNW   Wunstorf                  ETOB   Briest
+--   ETOU   Wiesbaden                 ETSB   Buchel
+--   ETSH   Holzdorf                  ETSP   Pferdsfeld
+--   ETSW   Wittstock                 ETUO   Gutersloh
+--   ETUS   Sembach
+--
 -- =========================================================================
 --
 -- CAUCASUS
