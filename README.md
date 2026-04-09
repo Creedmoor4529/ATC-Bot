@@ -98,7 +98,13 @@ Then create your local config and DCS hook:
 cp dcs_atc_export.lua.example dcs_atc_export.lua
 ```
 
-Create a file called `config.local.lua` in the project root with your airfield settings:
+Create a file called `config.local.lua` in the project root with your airfield settings. The fastest way is to copy the bundled template:
+
+```bash
+cp config.local.lua.example config.local.lua
+```
+
+Then edit `config.local.lua` to match your airfield, map, and SRS frequencies. The template contains the minimum required fields:
 
 ```lua
 AIRPORT_ICAO  = "LCRA"

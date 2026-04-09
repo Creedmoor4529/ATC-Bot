@@ -1,0 +1,43 @@
+-- DCS ATC Bot — Personal Configuration
+--
+-- Copy this file to config.local.lua in the same folder and edit to taste.
+-- config.local.lua is gitignored, so git pull will never clobber your edits.
+-- Any value set here overrides the same value in config.lua.
+-- Restart the bot after making changes.
+--
+-- Only AIRPORT_ICAO, DCS_MAP, ATC_CALLSIGN, and the frequencies are strictly
+-- required. Everything else has a sensible default in config.lua — copy a
+-- setting over only if you want to change it.
+
+-- =========================================================================
+-- REQUIRED
+-- =========================================================================
+
+-- Airfield you're operating from. Must be an ICAO code from the AIRFIELD
+-- REFERENCE list at the top of config.lua.
+AIRPORT_ICAO  = "LCRA"
+
+-- DCS theatre/map name. Must match the map your mission is running on,
+-- and the airfield above must exist on this map. The bot will fail fast
+-- at startup if these don't line up. See config.lua for valid map names
+-- (shown next to each section header, e.g. (DCS_MAP = "Syria")).
+DCS_MAP       = "Syria"
+
+-- Callsign used on SRS and in ATC responses ("<callsign> Tower", etc).
+ATC_CALLSIGN  = "Akrotiri"
+
+-- SRS frequencies in Hz. Set any *_2 secondary to 0 to disable that radio.
+FREQ_APPROACH   = 119000000
+FREQ_APPROACH_2 = 257000000
+FREQ_TOWER      = 119500000
+FREQ_TOWER_2    = 257500000
+FREQ_GROUND     = 118000000
+FREQ_GROUND_2   = 258000000
+
+-- =========================================================================
+-- COMMON OPTIONAL OVERRIDES
+-- =========================================================================
+
+-- Force a specific active runway. Leave commented out to let the bot pick
+-- based on wind. Use the runway number as it appears on charts ("28", "09L").
+-- ACTIVE_RUNWAY = "28"
