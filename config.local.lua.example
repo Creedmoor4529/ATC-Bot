@@ -39,5 +39,10 @@ FREQ_GROUND_2   = 258000000
 -- =========================================================================
 
 -- Force a specific active runway. Leave commented out to let the bot pick
--- based on wind. Use the runway number as it appears on charts ("28", "09L").
--- ACTIVE_RUNWAY = "28"
+-- based on wind. Use the runway number as it appears on charts ("22", "09L").
+-- ACTIVE_RUNWAY = "22"
+
+-- DCS in-game chat — ATC responses are posted to the DCS chat window.
+-- Enabled by default. The port must match CHAT_PORT in dcs_atc_export.lua.
+-- DCS_CHAT_ENABLED = true
+-- DCS_CHAT_PORT    = 15100
