@@ -65,17 +65,14 @@ if exist "piper\voices\!VOICE_NAME!.onnx" (
 ) else (
     mkdir piper\voices 2>nul
     :: Parse voice name: en_US-amy-medium → en/en_US/amy/medium
-    for /f "tokens=1,2 delims=-" %%a in ("!VOICE_NAME!") do (
+    :: tokens=1,2,3 with delims=- gives: en_US, amy, medium
+    for /f "tokens=1,2,3 delims=-" %%a in ("!VOICE_NAME!") do (
         set "V_LANG=%%a"
-        set "V_REST=%%b"
+        set "V_SPEAKER=%%b"
+        set "V_QUALITY=%%c"
     )
     :: Extract language prefix (e.g. en from en_US)
     for /f "tokens=1 delims=_" %%l in ("!V_LANG!") do set "V_LANGPRE=%%l"
-    :: Build path: rest is "name-quality" → name/quality
-    for /f "tokens=1,* delims=-" %%n in ("!V_REST!") do (
-        set "V_SPEAKER=%%n"
-        set "V_QUALITY=%%o"
-    )
     set "VOICE_URL=https://huggingface.co/rhasspy/piper-voices/resolve/main/!V_LANGPRE!/!V_LANG!/!V_SPEAKER!/!V_QUALITY!"
     echo Downloading voice model from HuggingFace...
     echo URL: !VOICE_URL!
