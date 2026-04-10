@@ -154,41 +154,40 @@ if not _validate_airfield(DCS_MAP, AIRPORT_ICAO):
         f"Airfields on {DCS_MAP}: {', '.join(_airfields_on_map(DCS_MAP))}"
     )
 
-ACTIVE_RUNWAY = _get("ACTIVE_RUNWAY", "ACTIVE_RUNWAY",
-                     _preferred_runway(AIRPORT_ICAO) or "", str)
+# Resolve active runway: config override > ILS preferred > first DB entry
+_rwy_desigs = _runway_designators(AIRPORT_ICAO, DCS_MAP)
+_rwy_default = (_preferred_runway(AIRPORT_ICAO)
+                or (_rwy_desigs[0] if _rwy_desigs else ""))
+ACTIVE_RUNWAY = _get("ACTIVE_RUNWAY", "ACTIVE_RUNWAY", _rwy_default, str)
 
-# Validate runway against the database — catch stale/wrong defaults early.
-if ACTIVE_RUNWAY:
-    _rwy_desigs = _runway_designators(AIRPORT_ICAO, DCS_MAP)
-    if _rwy_desigs:
-        # Build the full set of valid designators (each stored entry + its reciprocal)
-        _valid = set()
-        for _d in _rwy_desigs:
-            _valid.add(_d)
-            # Compute reciprocal
-            _num = ""
-            _suf = ""
-            for _ch in _d:
-                if _ch.isdigit():
-                    _num += _ch
-                else:
-                    _suf = _ch
-                    break
-            if _num:
-                _rn = (int(_num) + 18) % 36
-                if _rn == 0:
-                    _rn = 36
-                _rs = {"L": "R", "R": "L", "C": "C"}.get(_suf.upper(), "")
-                _valid.add(f"{_rn:02d}{_rs}")
-        if ACTIVE_RUNWAY not in _valid:
-            import logging as _logging
-            _logging.warning(
-                f"ACTIVE_RUNWAY=\"{ACTIVE_RUNWAY}\" does not match any runway "
-                f"at {AIRPORT_ICAO} on {DCS_MAP}. "
-                f"Valid runways: {', '.join(sorted(_valid))}. "
-                f"Falling back to {_rwy_desigs[0]}."
-            )
-            ACTIVE_RUNWAY = _rwy_desigs[0]
+# Validate runway against the database — catch stale/wrong values early.
+if _rwy_desigs:
+    _valid = set()
+    for _d in _rwy_desigs:
+        _valid.add(_d)
+        _num = ""
+        _suf = ""
+        for _ch in _d:
+            if _ch.isdigit():
+                _num += _ch
+            else:
+                _suf = _ch
+                break
+        if _num:
+            _rn = (int(_num) + 18) % 36
+            if _rn == 0:
+                _rn = 36
+            _rs = {"L": "R", "R": "L", "C": "C"}.get(_suf.upper(), "")
+            _valid.add(f"{_rn:02d}{_rs}")
+    if ACTIVE_RUNWAY not in _valid:
+        import logging as _logging
+        _logging.warning(
+            f"ACTIVE_RUNWAY=\"{ACTIVE_RUNWAY}\" does not match any runway "
+            f"at {AIRPORT_ICAO} on {DCS_MAP}. "
+            f"Valid runways: {', '.join(sorted(_valid))}. "
+            f"Falling back to {_rwy_desigs[0]}."
+        )
+        ACTIVE_RUNWAY = _rwy_desigs[0]
 
 MAGNETIC_VAR  = _get("MAGNETIC_VAR",  "MAGNETIC_VAR",
                      _mag_var_lookup(AIRPORT_ICAO), float)
