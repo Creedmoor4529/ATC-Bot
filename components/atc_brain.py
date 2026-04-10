@@ -96,7 +96,7 @@ If a transmission contains no callsign but is clearly a follow-up to your last i
 
 If a pilot uses profanity, insults, or inappropriate language on the radio: stay in character as a no-nonsense controller. Vary your response — pick a different style each time, do not repeat the same one twice in a row. IMPORTANT: check the pilot's position from TRAFFIC data — if they are on the ground (altitude below 100ft or not airborne), do NOT use responses that reference landing or altitude. Use ground-appropriate responses instead.
 Airborne examples:
-- "VIPER 11, {base_callsign} TOWER, I suggest you land and come say that to my face. Runway 28 cleared to land."
+- "VIPER 11, {base_callsign} TOWER, I suggest you land and come say that to my face. Runway {active_runway} cleared to land."
 - "VIPER 11, {base_callsign} TOWER, roger, you are cleared to grow up. Altitude at your discretion."
 Ground or airborne examples:
 - "VIPER 11, {base_callsign} TOWER, say again? I want to make sure I write that down correctly for the incident report."
@@ -310,7 +310,7 @@ class ATCBrain:
                 "station by callsign in a readback — they may reply with clearance elements only. "
                 "Check only that the mandatory clearance elements are correct "
                 "(runway, heading, altitude, squawk, frequency as applicable). "
-                "For runway, accept the number alone (e.g. '28' or '2-8') without the word 'runway' — "
+                "For runway, accept the number alone (e.g. '10' or '1-0') without the word 'runway' — "
                 "these are equivalent.\n"
                 "Accept the readback if the key elements are present and correct, even if the pilot adds "
                 "extra words, position information, or context beyond the clearance items. "

@@ -641,7 +641,7 @@ BOT_LON = 32.987
 -- Inbound course and MDA are auto-derived when not set.
 -- -------------------------------------------------------------------------
 -- TACAN_CHANNEL = "107X"       -- auto: from airfield database; override if needed
--- TACAN_INBOUND_COURSE = 280   -- auto: active runway heading in degrees
+-- TACAN_INBOUND_COURSE         -- auto: active runway heading in degrees
 -- TACAN_MDA_FT = 476           -- auto: airport elevation + 400 ft
 
 -- -------------------------------------------------------------------------
@@ -667,7 +667,7 @@ AI_PROVIDER = "openai"
 -- Added to the ATC brain system prompt at startup.
 -- Use this to describe local procedures, traffic patterns, or special rules.
 -- -------------------------------------------------------------------------
--- INSTRUCTIONS = "Expect fast jet traffic. Prefer straight-in approaches on runway 28. All aircraft report 10 nautical miles."
+-- INSTRUCTIONS = "Expect fast jet traffic. Prefer straight-in approaches. All aircraft report 10 nautical miles."
 
 -- -------------------------------------------------------------------------
 -- DCS In-Game Chat
