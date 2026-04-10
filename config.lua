@@ -610,10 +610,11 @@ FREQ_GROUND_2   = 258000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 -- Remove the leading "--" on any line to override the automatic value.
 -- =========================================================================
 
--- Active runway (auto: primary ILS runway from database)
+-- Active runway (auto: primary ILS runway or first runway in database)
 -- When AUTO_RUNWAY_SELECTION is true, this is treated as the preferred runway
 -- used during calm winds — the bot will switch to the reciprocal when wind favours it.
-ACTIVE_RUNWAY = "28"
+-- Leave commented to auto-detect from the database.
+-- ACTIVE_RUNWAY = "22"
 
 -- Automatically select the runway based on wind (headwind component).
 -- Set to false to pin the active runway to ACTIVE_RUNWAY at all times.

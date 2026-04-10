@@ -598,7 +598,8 @@ FREQ_GROUND_2   = 262000000   -- Ground secondary   (UHF, Hz)  — 0 to disable
 -- Remove the leading "--" on any line to override the automatic value.
 -- =========================================================================
 
--- Active runway (auto: primary ILS runway from database)
+-- Active runway (auto: primary ILS runway or first runway in database)
+-- Leave commented to auto-detect. Validated against the runway database at startup.
 -- ACTIVE_RUNWAY = "07"
 
 -- Magnetic variation in degrees east (auto: by map region)
