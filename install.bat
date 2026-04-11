@@ -86,14 +86,20 @@ if exist "piper\voices\!VOICE_NAME!.onnx" (
     )
 )
 
-:: --- Create .env -----------------------------------------------------------
+:: --- Create config files ----------------------------------------------------
 echo.
-echo [4/5] Setting up .env...
+echo [4/5] Setting up config files...
 if exist ".env" (
     echo [OK] .env already exists, skipping.
 ) else (
     copy ".env.example" ".env" >nul
     echo [OK] .env created from .env.example — add your API key before starting.
+)
+if exist "config.local.lua" (
+    echo [OK] config.local.lua already exists, skipping.
+) else (
+    copy "config.local.lua.example" "config.local.lua" >nul
+    echo [OK] config.local.lua created from example — edit to set your airfield and frequencies.
 )
 
 :: --- Build exe -------------------------------------------------------------
@@ -120,7 +126,7 @@ echo  Installation complete.
 echo.
 echo  Next steps:
 echo    1. Edit .env and add your API key (OPENAI_API_KEY or GROQ_API_KEY)
-echo    2. Edit config.lua to set your airfield and frequencies
+echo    2. Edit config.local.lua to set your airfield and frequencies
 echo    3. Install dcs_atc_export.lua into DCS Saved Games\Scripts\Hooks\
 echo    4. Run:  "ATC Bot.exe"   or   python main.py
 echo ============================================================
