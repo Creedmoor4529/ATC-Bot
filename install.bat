@@ -88,13 +88,30 @@ if exist "piper\voices\!VOICE_NAME!.onnx" (
 
 :: --- Create .env -----------------------------------------------------------
 echo.
-echo [4/4] Setting up .env...
+echo [4/5] Setting up .env...
 if exist ".env" (
     echo [OK] .env already exists, skipping.
 ) else (
     copy ".env.example" ".env" >nul
     echo [OK] .env created from .env.example — add your API key before starting.
 )
+
+:: --- Build exe -------------------------------------------------------------
+echo.
+echo [5/5] Building ATC Bot.exe...
+python -m pip install pyinstaller --quiet
+pyinstaller --onefile --console --name "ATC Bot" --icon=atcicon.ico launcher.py --distpath dist --workpath build --noconfirm
+if errorlevel 1 (
+    echo [WARN] PyInstaller build failed — you can still run: python main.py
+    goto :skipcopy
+)
+if exist "dist\ATC Bot.exe" (
+    copy /y "dist\ATC Bot.exe" "ATC Bot.exe" >nul
+    echo [OK] ATC Bot.exe created.
+) else (
+    echo [WARN] Built exe not found — you can still run: python main.py
+)
+:skipcopy
 
 :: --- Done ------------------------------------------------------------------
 echo.
@@ -105,8 +122,7 @@ echo  Next steps:
 echo    1. Edit .env and add your API key (OPENAI_API_KEY or GROQ_API_KEY)
 echo    2. Edit config.lua to set your airfield and frequencies
 echo    3. Install dcs_atc_export.lua into DCS Saved Games\Scripts\Hooks\
-echo    4. Run:  python main.py
-echo       OR:   build_launcher.bat  to create ATC Bot.exe
+echo    4. Run:  "ATC Bot.exe"   or   python main.py
 echo ============================================================
 echo.
 pause
