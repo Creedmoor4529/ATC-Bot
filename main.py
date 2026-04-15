@@ -456,7 +456,13 @@ class ATCBot:
             ac_type = self.state.strips[pilot_callsign].aircraft_type
         atc_snapshot = self.state.context_snapshot(airport_lat=apt_lat, airport_lon=apt_lon, requesting_aircraft_type=ac_type)
         traffic = self.tacview.traffic_summary(airport_lat=apt_lat, airport_lon=apt_lon, radius_nm=150.0)
-        logger.debug(f"Traffic summary ({len(self.tacview.objects)} Tacview objects, apt={apt_lat:.3f},{apt_lon:.3f}):\n{traffic}")
+        all_ac = self.tacview.get_all_aircraft()
+        logger.info(
+            f"Tacview visibility: {len(self.tacview.objects)} total objects, "
+            f"{len(all_ac)} aircraft (Air-typed). "
+            f"Aircraft callsigns: {[a.pilot or a.name or a.object_id for a in all_ac]}"
+        )
+        logger.debug(f"Traffic summary (apt={apt_lat:.3f},{apt_lon:.3f}, radius=150nm):\n{traffic}")
 
         response = await self.brain.respond(
             pilot_transmission=text,
