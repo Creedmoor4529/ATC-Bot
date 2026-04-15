@@ -11,11 +11,14 @@ This is the source of truth the ATC brain uses to stay consistent
 across multiple transmissions.
 """
 
+import logging
 import math
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from config import (
     AIRPORT_ICAO, ACTIVE_RUNWAY, DCS_MAP,
