@@ -2409,3 +2409,57 @@ def runway_to_heading(runway: str) -> int:
         else:
             break
     return int(num_str) * 10 if num_str else 0
+
+
+def final_approach_waypoint(
+    icao: str,
+    map_name: str,
+    designator: str,
+    dist_nm: float = 5.0,
+    magnetic_var: float = 0.0,
+) -> tuple[float, float, int] | None:
+    """Return (lat, lon, runway_mag_heading) for a straight-in final waypoint
+    dist_nm before the landing threshold of the active runway.
+
+    Returns None if the runway can't be resolved in the database.
+    """
+    runways = RUNWAYS.get(map_name, {}).get(icao.upper(), [])
+    if not runways:
+        return None
+    rwy_hdg_mag = runway_to_heading(designator)
+    if rwy_hdg_mag == 0:
+        return None
+    designator_num = int("".join(c for c in designator if c.isdigit()) or 0)
+    recip_num = ((rwy_hdg_mag + 180) // 10) % 36
+    if recip_num == 0:
+        recip_num = 36
+
+    thr_lat = thr_lon = None
+    for (lat1, lon1, lat2, lon2, _width, rwy_desig) in runways:
+        base_num = int("".join(c for c in rwy_desig if c.isdigit()) or 0)
+        if designator_num == base_num:
+            thr_lat, thr_lon = lat1, lon1
+            break
+        if base_num == recip_num:
+            thr_lat, thr_lon = lat2, lon2
+            break
+    if thr_lat is None:
+        return None
+
+    # Project dist_nm from the landing threshold back along the approach
+    # course (reciprocal of the runway heading) in true degrees.
+    approach_brg_true = ((rwy_hdg_mag + 180) % 360 + magnetic_var) % 360
+    R_NM = 3440.065
+    brg = _math.radians(approach_brg_true)
+    lat1r = _math.radians(thr_lat)
+    lon1r = _math.radians(thr_lon)
+    d = dist_nm / R_NM
+    lat2r = _math.asin(
+        _math.sin(lat1r) * _math.cos(d)
+        + _math.cos(lat1r) * _math.sin(d) * _math.cos(brg)
+    )
+    lon2r = lon1r + _math.atan2(
+        _math.sin(brg) * _math.sin(d) * _math.cos(lat1r),
+        _math.cos(d) - _math.sin(lat1r) * _math.sin(lat2r),
+    )
+    return (_math.degrees(lat2r), _math.degrees(lon2r), rwy_hdg_mag)

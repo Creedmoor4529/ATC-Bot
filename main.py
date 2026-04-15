@@ -180,6 +180,11 @@ class ATCBot:
             on_audio_received=self.accumulator.feed,
         )
 
+    def _final_wpt(self) -> tuple[float, float] | None:
+        """Latest 5-mile straight-in final waypoint for the active runway."""
+        wpt = self.state.final_approach_waypoint()
+        return (wpt[0], wpt[1]) if wpt else None
+
     async def start(self):
         logger.info("=== DCS ATC Bot starting ===")
 
@@ -455,7 +460,7 @@ class ATCBot:
         if pilot_callsign and pilot_callsign in self.state.strips:
             ac_type = self.state.strips[pilot_callsign].aircraft_type
         atc_snapshot = self.state.context_snapshot(airport_lat=apt_lat, airport_lon=apt_lon, requesting_aircraft_type=ac_type)
-        traffic = self.tacview.traffic_summary(airport_lat=apt_lat, airport_lon=apt_lon, radius_nm=150.0)
+        traffic = self.tacview.traffic_summary(airport_lat=apt_lat, airport_lon=apt_lon, radius_nm=150.0, final_wpt=self._final_wpt())
         all_ac = self.tacview.get_all_aircraft()
         logger.info(
             f"Tacview visibility: {len(self.tacview.objects)} total objects, "
@@ -563,7 +568,7 @@ class ATCBot:
         apt_lon = BOT_LON
         ac_type = self.state.strips[pilot_callsign].aircraft_type if pilot_callsign in self.state.strips else ""
         atc_snapshot = self.state.context_snapshot(airport_lat=apt_lat, airport_lon=apt_lon, requesting_aircraft_type=ac_type)
-        traffic      = self.tacview.traffic_summary(airport_lat=apt_lat, airport_lon=apt_lon, radius_nm=150.0)
+        traffic      = self.tacview.traffic_summary(airport_lat=apt_lat, airport_lon=apt_lon, radius_nm=150.0, final_wpt=self._final_wpt())
 
         seq_word = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}.get(sequence, str(sequence))
         instruction = (
@@ -651,7 +656,8 @@ class ATCBot:
             airport_lat=BOT_LAT, airport_lon=BOT_LON, requesting_aircraft_type=ac_type
         )
         traffic = self.tacview.traffic_summary(
-            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0,
+            final_wpt=self._final_wpt(),
         )
 
         if conflict["type"] == "runway_incursion":
@@ -715,7 +721,8 @@ class ATCBot:
             airport_lat=BOT_LAT, airport_lon=BOT_LON, requesting_aircraft_type=ac_type
         )
         traffic = self.tacview.traffic_summary(
-            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0,
+            final_wpt=self._final_wpt(),
         )
 
         instruction = (
@@ -792,7 +799,8 @@ class ATCBot:
             airport_lat=BOT_LAT, airport_lon=BOT_LON, requesting_aircraft_type=ac_type
         )
         traffic = self.tacview.traffic_summary(
-            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0
+            airport_lat=BOT_LAT, airport_lon=BOT_LON, radius_nm=150.0,
+            final_wpt=self._final_wpt(),
         )
 
         # Determine sequence number from arrival_sequence

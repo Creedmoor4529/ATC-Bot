@@ -73,7 +73,13 @@ class AircraftState:
     def is_airborne(self) -> bool:
         return self.alt_ft > 100
 
-    def summary(self, airport_lat: float = 0.0, airport_lon: float = 0.0) -> str:
+    def summary(
+        self,
+        airport_lat: float = 0.0,
+        airport_lon: float = 0.0,
+        final_wpt_lat: float = 0.0,
+        final_wpt_lon: float = 0.0,
+    ) -> str:
         raw = self.pilot or self.group or self.name or self.object_id
         # DCS label format: "callsign | pilot_name | squad | ..."
         # The part before the first | is the radio callsign; rest is pilot/squad metadata.
@@ -94,6 +100,9 @@ class AircraftState:
         if airport_lat and airport_lon:
             brg = _bearing(self.lat, self.lon, airport_lat, airport_lon)
             base += f" | MAG-BRG-TO-FIELD {brg:.0f}"
+        if final_wpt_lat and final_wpt_lon:
+            brg_wpt = _bearing(self.lat, self.lon, final_wpt_lat, final_wpt_lon)
+            base += f" | MAG-BRG-TO-5MI-FINAL {brg_wpt:.0f}"
         return base
 
 
@@ -171,18 +180,27 @@ class TacviewClient:
             if "Aerodrome" in o.type_str and o.coalition == "Allies"
         ]
 
-    def traffic_summary(self, airport_lat: float = 0.0, airport_lon: float = 0.0, radius_nm: float = 150.0) -> str:
+    def traffic_summary(
+        self,
+        airport_lat: float = 0.0,
+        airport_lon: float = 0.0,
+        radius_nm: float = 150.0,
+        final_wpt: tuple[float, float] | None = None,
+    ) -> str:
         """Human-readable traffic picture for injection into LLM context.
-        Filters to aircraft within radius_nm of the airport position."""
+        Filters to aircraft within radius_nm of the airport position.
+        If final_wpt=(lat, lon) is given, each aircraft line also reports the
+        magnetic bearing from its current position to that waypoint."""
         aircraft = self.get_all_aircraft()
         if airport_lat and airport_lon:
             aircraft = [a for a in aircraft if self._distance_nm(a.lat, a.lon, airport_lat, airport_lon) <= radius_nm]
         if not aircraft:
             return "No traffic within range."
+        wpt_lat, wpt_lon = final_wpt if final_wpt else (0.0, 0.0)
         lines = [f"Traffic within {radius_nm:.0f}nm ({len(aircraft)} aircraft):"]
         for ac in sorted(aircraft, key=lambda a: self._distance_nm(a.lat, a.lon, airport_lat, airport_lon)):
             dist = self._distance_nm(ac.lat, ac.lon, airport_lat, airport_lon) if airport_lat else 0
-            lines.append(f"  - {ac.summary(airport_lat, airport_lon)} | DIST {dist:.0f}nm")
+            lines.append(f"  - {ac.summary(airport_lat, airport_lon, wpt_lat, wpt_lon)} | DIST {dist:.0f}nm")
         return "\n".join(lines)
 
     @staticmethod

@@ -26,7 +26,7 @@ from config import (
     FREQ_TOWER, MSA_FT, MAGNETIC_VAR,
     BOT_LAT, BOT_LON,
 )
-from airfield_db import _on_runway, navaid_summary, runway_to_heading, taxiway_lookup, best_runway_for_wind
+from airfield_db import _on_runway, navaid_summary, runway_to_heading, taxiway_lookup, best_runway_for_wind, final_approach_waypoint
 
 # Runway heading and its reciprocal — used for approach detection on either end
 _RWY_HEADING = runway_to_heading(ACTIVE_RUNWAY)
@@ -618,18 +618,34 @@ class ATCState:
         a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
         return math.degrees(2 * math.asin(math.sqrt(a))) * 60
 
+    def final_approach_waypoint(self, dist_nm: float = 5.0) -> Optional[tuple[float, float, int]]:
+        """Return (lat, lon, runway_mag_heading) for the active runway's
+        straight-in final waypoint dist_nm before the landing threshold."""
+        return final_approach_waypoint(
+            self.airport_icao, DCS_MAP, self.active_runway.designator,
+            dist_nm=dist_nm, magnetic_var=MAGNETIC_VAR,
+        )
+
     def context_snapshot(self, airport_lat: float = 0.0, airport_lon: float = 0.0, requesting_aircraft_type: str = "") -> str:
         tower_mhz = f"{FREQ_TOWER / 1e6:.3f}"
+        rwy_hdg_mag = runway_to_heading(self.active_runway.designator)
         lines = [
             f"Airport: {self.airport_icao}",
             f"Elevation: {AIRPORT_ELEVATION_FT}ft",
             f"Minimum safe altitude: {MSA_FT}ft",
-            f"Active runway: {self.active_runway.designator}",
+            f"Active runway: {self.active_runway.designator} (heading {rwy_hdg_mag:03d}° magnetic)",
             f"Runway clear: {self.runway_clear()}"
             + (f" | On runway: {self.active_runway.landing_callsign}" if self.active_runway.landing_callsign else "")
             + (f", {self.active_runway.line_up_callsign}" if self.active_runway.line_up_callsign else ""),
             f"Tower frequency: {tower_mhz} MHz",
         ]
+        wpt = self.final_approach_waypoint()
+        if wpt:
+            wlat, wlon, _ = wpt
+            lines.append(
+                f"5-mile final waypoint (straight-in to runway {self.active_runway.designator}): "
+                f"LAT {wlat:.4f} LON {wlon:.4f}"
+            )
         nav_str = navaid_summary(self.airport_icao, requesting_aircraft_type)
         if nav_str:
             lines.append(f"Navaids: {nav_str}")
