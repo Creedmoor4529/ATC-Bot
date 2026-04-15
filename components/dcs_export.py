@@ -56,6 +56,10 @@ class DCSWeather:
     def qnh_inhg(self) -> float:
         return self.pressure_hpa * 0.02953
 
+    @property
+    def qnh_mmhg(self) -> float:
+        return self.pressure_hpa * 0.750062
+
     def update(self, data: dict):
         self.last_seen = time.monotonic()
         if "status" in data:
@@ -80,7 +84,7 @@ class DCSWeather:
         wind_str = "calm" if spd < 1 else f"{self.wind_dir_mag:03.0f} at {spd:.0f} knots"
         return (
             f"Wind: {wind_str} | "
-            f"QNH: {self.pressure_hpa:.0f} hPa / {self.qnh_inhg:.2f} inHg | "
+            f"QNH: {self.pressure_hpa:.0f} hPa / {self.qnh_inhg:.2f} inHg / {self.qnh_mmhg:.0f} mmHg | "
             f"Temperature: {self.temp_c:.0f}°C"
         )
 
